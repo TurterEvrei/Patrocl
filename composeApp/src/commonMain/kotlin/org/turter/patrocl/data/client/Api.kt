@@ -11,8 +11,8 @@ object ApiServiceName {
 }
 
 object ApiEndpoint {
-    private val API_BASE_URL_HTTP = "http://192.168.0.105:8765"
-    private val API_BASE_URL_WS = "ws://192.168.0.105:8765"
+    private val API_BASE_URL_HTTP = "http://192.168.0.105:18765"
+    private val API_BASE_URL_WS = "ws://192.168.0.105:18765"
 
     object Menu {
         fun getCategoryTree() = "$API_BASE_URL_HTTP/$STATION_CONNECTOR/menu/category-list/tree"

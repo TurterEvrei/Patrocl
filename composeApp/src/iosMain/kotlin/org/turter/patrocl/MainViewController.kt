@@ -5,22 +5,24 @@ import org.publicvalue.multiplatform.oidc.ExperimentalOpenIdConnect
 import org.publicvalue.multiplatform.oidc.appsupport.IosCodeAuthFlowFactory
 import org.publicvalue.multiplatform.oidc.tokenstore.IosKeychainTokenStore
 import org.turter.patrocl.di.KoinApplication
+import org.turter.patrocl.di.initKoin
 
 @OptIn(ExperimentalOpenIdConnect::class)
-fun MainViewController() = ComposeUIViewController {
+fun MainViewController() = ComposeUIViewController(
+        configure = {
+                initKoin(
+                        authFlowFactory = IosCodeAuthFlowFactory(),
+                        tokenStore = IosKeychainTokenStore()
+                )
+        }
+) {
 
-    val factory = IosCodeAuthFlowFactory()
-
-//    initKoin(
+//    val factory = IosCodeAuthFlowFactory()
+//
+//    org.turter.patrocl.di.KoinApplication(
 //        authFlowFactory = factory,
 //        tokenStore = IosKeychainTokenStore()
-//    )
-
-    KoinApplication(
-        authFlowFactory = factory,
-        tokenStore = IosKeychainTokenStore()
-    ) {
+//    ) {
         App()
-    }
-
+//    }
 }
