@@ -9,7 +9,7 @@ import androidx.compose.ui.unit.dp
 import org.turter.patrocl.domain.model.person.Employee
 import org.turter.patrocl.domain.model.person.Employee.CompanyEmbedded
 import org.turter.patrocl.presentation.components.DropDownMenu
-import org.turter.patrocl.presentation.components.LoadingButton
+import org.turter.patrocl.presentation.components.btn.LoadingButton
 
 @Composable
 fun ChangePreferCompanyDialog(

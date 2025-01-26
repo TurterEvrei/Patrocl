@@ -107,10 +107,10 @@ class ProfileViewModel(
 
     private fun confirmChangingPreferCompany() = execInContent {
         val targetId = newPreferCompany?.id
-        if (targetId != null && targetId != waiter.preferCompanyId) {
+        if (targetId != null && targetId != employee.preferredCompanyId) {
             isChangingCompany = true
             coroutineScope.launch {
-                waiterService.changePreferCompany(targetId)
+                employeeService.changePreferCompany(targetId)
                     .apply {
                         closeChangePreferCompanyDialog()
                         isChangingCompany = false

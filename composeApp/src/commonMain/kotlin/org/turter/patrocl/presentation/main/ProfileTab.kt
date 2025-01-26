@@ -24,7 +24,7 @@ data class ProfileTab(
             val iconPainter = rememberVectorPainter(Icons.Default.Person)
             return remember {
                 TabOptions(
-                    index = 1u,
+                    index = 2u,
                     title = "Profile",
                     icon = iconPainter
                 )

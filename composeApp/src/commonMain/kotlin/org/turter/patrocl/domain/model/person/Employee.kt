@@ -1,5 +1,7 @@
 package org.turter.patrocl.domain.model.person
 
+import org.turter.patrocl.domain.model.enums.Specialization
+
 data class Employee(
     val id: String,
     val name: String,
@@ -9,6 +11,7 @@ data class Employee(
     val active: Boolean,
     val position: PositionEmbedded,
     val userId: String,
+    val preferredCompanyId: String,
     val companyList: List<CompanyEmbedded>
 ) {
     data class CompanyEmbedded(
@@ -19,7 +22,7 @@ data class Employee(
     data class PositionEmbedded(
         val id: String,
         val title: String,
-        val specialization: String,
+        val specialization: Specialization,
         val rankWeight: Int
     )
 }

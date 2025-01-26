@@ -51,10 +51,9 @@ fun SwipeToDismissComponent(
     
     SwipeToDismissBox(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .fillMaxWidth(),
         state = dismissState,
-        backgroundContent = { bg(dismissState = dismissState) }
+        backgroundContent = { bg(dismissState) }
     ) {
         content()
     }

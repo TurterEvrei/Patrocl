@@ -4,7 +4,6 @@ import org.turter.patrocl.domain.model.order.OrderPreview
 import org.turter.patrocl.presentation.error.ErrorType
 
 sealed class OrdersScreenState {
-
     data object Initial: OrdersScreenState()
 
     data object Loading: OrdersScreenState()
@@ -16,5 +15,4 @@ sealed class OrdersScreenState {
     data class Error(
         val errorType: ErrorType
     ) : OrdersScreenState()
-
 }

@@ -10,7 +10,7 @@ import org.publicvalue.multiplatform.oidc.appsupport.CodeAuthFlowFactory
 import org.publicvalue.multiplatform.oidc.tokenstore.TokenStore
 import org.turter.patrocl.data.auth.AppAuth
 import org.turter.patrocl.data.auth.OidcClientInitializer
-import org.turter.patrocl.data.client.HttpClientInitializer
+import org.turter.patrocl.data.remote.config.HttpClientInitializer
 
 
 @OptIn(ExperimentalOpenIdConnect::class)
@@ -44,29 +44,30 @@ fun initKoin(
         },
         appModule,
         viewModelModule,
+//        dataMockModule
         dataModule
     )
 }
 
-@OptIn(ExperimentalOpenIdConnect::class)
-@Composable
-fun KoinApplication(
-    authFlowFactory: CodeAuthFlowFactory,
-    tokenStore: TokenStore,
-    content: @Composable () -> Unit
-) {
-    KoinApplication(
-        application = {
-            modules(
-                module {
-                    single { authFlowFactory }
-                    single { tokenStore }
-                },
-                appModule,
-                viewModelModule,
-                dataModule
-            )
-        },
-        content = content
-    )
-}
+//@OptIn(ExperimentalOpenIdConnect::class)
+//@Composable
+//fun KoinApplication(
+//    authFlowFactory: CodeAuthFlowFactory,
+//    tokenStore: TokenStore,
+//    content: @Composable () -> Unit
+//) {
+//    KoinApplication(
+//        application = {
+//            modules(
+//                module {
+//                    single { authFlowFactory }
+//                    single { tokenStore }
+//                },
+//                appModule,
+//                viewModelModule,
+//                dataModule
+//            )
+//        },
+//        content = content
+//    )
+//}

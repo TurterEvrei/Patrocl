@@ -1,12 +1,13 @@
 package org.turter.patrocl.data.mapper
 
 import io.realm.kotlin.ext.toRealmList
-import org.turter.patrocl.domain.dto.EmployeeDto
-import org.turter.patrocl.domain.dto.EmployeeDto.CompanyEmbeddedDto
-import org.turter.patrocl.domain.dto.EmployeeDto.PositionEmbeddedDto
-import org.turter.patrocl.domain.entity.CompanyEmbeddedLocal
-import org.turter.patrocl.domain.entity.EmployeeLocal
-import org.turter.patrocl.domain.entity.PositionEmbeddedLocal
+import org.turter.patrocl.data.dto.person.EmployeeDto
+import org.turter.patrocl.data.dto.person.EmployeeDto.CompanyEmbeddedDto
+import org.turter.patrocl.data.dto.person.EmployeeDto.PositionEmbeddedDto
+import org.turter.patrocl.data.local.entity.CompanyEmbeddedLocal
+import org.turter.patrocl.data.local.entity.EmployeeLocal
+import org.turter.patrocl.data.local.entity.PositionEmbeddedLocal
+import org.turter.patrocl.domain.model.enums.Specialization
 import org.turter.patrocl.domain.model.person.Employee
 import org.turter.patrocl.domain.model.person.Employee.CompanyEmbedded
 
@@ -19,6 +20,7 @@ fun EmployeeDto.toEmployeeFromDto(): Employee = Employee(
     active = active,
     position = toPositionEmbedded(position),
     userId = userId,
+    preferredCompanyId = preferredCompanyId,
     companyList = companyList.map { toCompanyEmbedded(it) }
 )
 
@@ -32,6 +34,7 @@ fun EmployeeDto.toEmployeeLocalFromDto(): EmployeeLocal =
         target.active = active
         target.position = toPositionEmbeddedLocal(position)
         target.userId = userId
+        target.preferredCompanyId = preferredCompanyId
         target.companyList = companyList.map { toCompanyEmbeddedLocal(it) }.toRealmList()
         target
     }
@@ -45,6 +48,7 @@ fun EmployeeLocal.toEmployeeFromLocal(): Employee = Employee(
     active = active,
     position = toPositionEmbedded(position),
     userId = userId,
+    preferredCompanyId = preferredCompanyId,
     companyList = companyList.map { toCompanyEmbedded(it) }
 )
 
@@ -60,7 +64,8 @@ private fun toPositionEmbedded(position: PositionEmbeddedLocal?) =
     Employee.PositionEmbedded(
         id = position?.id ?: "",
         title = position?.title ?: "",
-        specialization = position?.specialization ?: "",
+        specialization = Specialization.valueOf(position?.specialization ?: ""),
+//        specialization = position?.specialization ?: "",
         rankWeight = position?.rankWeight ?: 0
     )
 
@@ -80,7 +85,7 @@ private fun toPositionEmbeddedLocal(position: PositionEmbeddedDto): PositionEmbe
     PositionEmbeddedLocal().let { target ->
         target.id = position.id
         target.title = position.title
-        target.specialization = position.specialization
+        target.specialization = position.specialization.name
         target.rankWeight = position.rankWeight
         target
     }

@@ -5,5 +5,4 @@ data class Waiter(
     val rkId: String,
     val code: String,
     val name: String,
-    val preferCompanyId: String
 )

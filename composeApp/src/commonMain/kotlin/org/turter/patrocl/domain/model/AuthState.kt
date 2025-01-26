@@ -11,4 +11,5 @@ sealed class AuthState {
     data class Authorized(val user: User): AuthState()
 
     data class NotAuthorized(val cause: Throwable): AuthState()
+
 }

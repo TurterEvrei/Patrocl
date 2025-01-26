@@ -31,8 +31,8 @@ class OrdersViewModel(
                         is FetchState.Finished -> {
                             _screenState.emit(
                                 fetchState.result.fold(
-                                    onSuccess = {
-                                        OrdersScreenState.Content(orders = it)
+                                    onSuccess = { list ->
+                                        OrdersScreenState.Content(orders = list.sortedBy { it.name })
                                     },
                                     onFailure = {
                                         OrdersScreenState.Error(errorType = ErrorType.from(it))

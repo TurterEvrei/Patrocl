@@ -1,5 +1,12 @@
 package org.turter.patrocl.presentation.orders.list.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -24,12 +32,15 @@ fun OrderCard(
     order: OrderPreview,
     onCardClick: (String) -> Unit
 ) {
-    val cardColors = if (order.bill) CardDefaults.cardColors(
-        containerColor = CardDefaults.cardColors().disabledContainerColor
-    ) else CardDefaults.cardColors()
+    val cardContainerColor by animateColorAsState(
+        targetValue = if (order.bill) CardDefaults.cardColors().disabledContainerColor
+        else CardDefaults.cardColors().containerColor,
+        animationSpec = tween(durationMillis = 500)
+    )
 
     Card(
-        colors = cardColors,
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = cardContainerColor),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 4.dp
         ),
@@ -50,7 +61,11 @@ fun OrderCard(
                     fontWeight = FontWeight.ExtraBold,
                     maxLines = 1
                 )
-                if (order.bill) {
+                AnimatedVisibility(
+                    visible = order.bill,
+                    enter = fadeIn(animationSpec = tween(300)) + scaleIn(animationSpec = tween(300)),
+                    exit = fadeOut(animationSpec = tween(300)) + scaleOut(animationSpec = tween(300))
+                ) {
                     Icon(
                         imageVector = Fact_check,
                         contentDescription = "Bill icon"
@@ -67,7 +82,7 @@ fun OrderCard(
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize
             )
             Text(
-                text = "Сумма: ${order.getFormattedSum()}",
+                text = "Сумма: ${order.sum}",
                 fontSize = MaterialTheme.typography.titleMedium.fontSize,
                 fontWeight = FontWeight.ExtraBold
             )
