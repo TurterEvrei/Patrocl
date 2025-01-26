@@ -9,11 +9,11 @@ data class OrderPreview(
     val tableName: String,
     val waiterCode: String,
     val waiterName: String,
-    val sum: Int,
+    val sum: Float,
     val bill: Boolean,
     val openTime: LocalDateTime,
 ) {
-    fun getFormattedSum() = sum / 100f
+//    fun getFormattedSum() = sum / 100f
 
     fun getFormattedDate(): String = "${openTime.hour}:${openTime.minute}"
 }

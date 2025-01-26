@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.turter.patrocl.presentation.components.LoadingTextButton
+import org.turter.patrocl.presentation.components.btn.LoadingTextButton
 
 @Composable
 fun ProfileOptionComponent(

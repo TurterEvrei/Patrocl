@@ -15,14 +15,14 @@ import org.turter.patrocl.presentation.orders.edit.components.EditOrderComponent
 class EditOrderScreen(private val orderGuid: String): Screen {
     @Composable
     override fun Content() {
-        val vm: EditOrderViewModel = getScreenModel { parametersOf(orderGuid) }
         val navigator = LocalNavigator.currentOrThrow
+        val vm: EditOrderViewModel = getScreenModel { parametersOf(orderGuid, navigator) }
 
         when (val currentScreenState = vm.screenState.collectAsState().value) {
-            is EditOrderScreenState.UpdateSavedOrder -> {
+            is EditOrderScreenState.Main -> {
                 EditOrderComponent(
                     vm = vm,
-                    currentScreenState = currentScreenState
+                    state = currentScreenState
                 )
             }
 
@@ -32,8 +32,6 @@ class EditOrderScreen(private val orderGuid: String): Screen {
                     onRetry = { vm.sendEvent(RefreshData) }
                 )
             }
-
-            is EditOrderScreenState.RedirectToOrders -> navigator.popUntilRoot()
 
             else -> { CircularLoader() }
         }

@@ -17,7 +17,7 @@ import org.turter.patrocl.domain.service.WaiterService
 import org.turter.patrocl.presentation.error.ErrorType
 
 sealed class MainUiEvent {
-    data object Login : MainUiEvent()
+//    data object Login : MainUiEvent()
     data object Logout : MainUiEvent()
     data object RefreshWaiter : MainUiEvent()
 }
@@ -39,20 +39,16 @@ class MainViewModel(
 
     init {
         coroutineScope.launch {
-            combine(
-                waiterService.getOwnWaiterStateFlow(),
-                messageService.getMessageStateFlow()
-            ) { waiterFetchState, message ->
+            waiterService.getOwnWaiterStateFlow().collect { waiterFetchState->
                 log.d { "Combine flows in init: \n" +
-                        "-Waiter: $waiterFetchState \n" +
-                        "-Message: $message" }
-                when (waiterFetchState) {
+                        "-Waiter: $waiterFetchState "}
+                _mainScreenState.value = when (waiterFetchState) {
                     is FetchState.Finished -> {
                         waiterFetchState.result.fold(
                             onSuccess = { waiter ->
                                 MainScreenState.Content(
                                     waiter = waiter,
-                                    message = message
+                                    messageState = messageService.getMessageStateFlow()
                                 )
                             },
                             onFailure = {
@@ -63,18 +59,6 @@ class MainViewModel(
 
                     else -> MainScreenState.Loading
                 }
-            }.collect { newMainScreenState ->
-                _mainScreenState.value = newMainScreenState
-            }
-        }
-
-        coroutineScope.launch {
-            log.d { "Ping MainViewModel: ${this@MainViewModel}" }
-        }
-
-        coroutineScope.launch {
-            messageService.getMessageStateFlow().collect { value ->
-                log.d { "Collect _messageStateFlow value: $value" }
             }
         }
 
@@ -91,14 +75,9 @@ class MainViewModel(
 
     fun sendEvent(event: MainUiEvent) {
         when (event) {
-            is MainUiEvent.Login -> authenticate()
             is MainUiEvent.Logout -> logout()
             is MainUiEvent.RefreshWaiter -> refreshWaiter()
         }
-    }
-
-    private fun authenticate() = coroutineScope.launch {
-        authService.authenticate()
     }
 
     private fun logout() = coroutineScope.launch {

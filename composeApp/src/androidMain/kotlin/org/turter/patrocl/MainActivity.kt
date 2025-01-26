@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import org.koin.core.context.GlobalContext
 import org.publicvalue.multiplatform.oidc.ExperimentalOpenIdConnect
 import org.publicvalue.multiplatform.oidc.appsupport.AndroidCodeAuthFlowFactory
 import org.publicvalue.multiplatform.oidc.tokenstore.AndroidSettingsTokenStore
@@ -21,11 +22,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         codeAuthFlowFactory.registerActivity(this)
-
-        initKoin(
-            authFlowFactory = codeAuthFlowFactory,
-            tokenStore = AndroidSettingsTokenStore(context = this)
-        )
+        if(GlobalContext.getKoinApplicationOrNull() == null) {
+            initKoin(
+                authFlowFactory = codeAuthFlowFactory,
+                tokenStore = AndroidSettingsTokenStore(context = this)
+            )
+        }
 
         setContent {
             App()

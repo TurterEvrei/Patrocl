@@ -16,13 +16,5 @@ fun MainViewController() = ComposeUIViewController(
                 )
         }
 ) {
-
-//    val factory = IosCodeAuthFlowFactory()
-//
-//    org.turter.patrocl.di.KoinApplication(
-//        authFlowFactory = factory,
-//        tokenStore = IosKeychainTokenStore()
-//    ) {
         App()
-//    }
 }

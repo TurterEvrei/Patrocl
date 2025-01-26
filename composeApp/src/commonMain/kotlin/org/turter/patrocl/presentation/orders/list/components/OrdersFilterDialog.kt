@@ -19,7 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.turter.patrocl.domain.model.order.OrdersFilter
+import org.turter.patrocl.presentation.orders.list.OrdersFilter
 
 @Composable
 fun OrdersFilterDialog(
@@ -54,7 +54,7 @@ fun OrdersFilterDialog(
                 )
             }
         },
-        onDismissRequest = {},
+        onDismissRequest = onDismiss,
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(

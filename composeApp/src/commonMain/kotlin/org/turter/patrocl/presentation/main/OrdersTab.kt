@@ -24,7 +24,7 @@ data class OrdersTab(
             val painterIcon = rememberVectorPainter(Table_restaurant)
             return remember {
                 TabOptions(
-                    index = 0u,
+                    index = 1u,
                     title = "Orders",
                     icon = painterIcon
                 )

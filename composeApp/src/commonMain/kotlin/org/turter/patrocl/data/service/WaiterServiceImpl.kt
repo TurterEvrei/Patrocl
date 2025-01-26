@@ -18,12 +18,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.turter.patrocl.data.mapper.toWaiterFromLocal
 import org.turter.patrocl.data.mapper.toWaiterLocalFromDto
-import org.turter.patrocl.domain.BindStatus
-import org.turter.patrocl.domain.client.WaiterApiClient
-import org.turter.patrocl.domain.dto.EditOwnWaiterPayload
+import org.turter.patrocl.domain.model.BindStatus
+import org.turter.patrocl.data.remote.client.WaiterApiClient
 import org.turter.patrocl.domain.model.FetchState
 import org.turter.patrocl.domain.model.person.Waiter
-import org.turter.patrocl.domain.repository.WaiterLocalRepository
+import org.turter.patrocl.data.local.WaiterLocalRepository
 import org.turter.patrocl.domain.service.WaiterService
 
 class WaiterServiceImpl(
@@ -113,12 +112,12 @@ class WaiterServiceImpl(
         )
     }
 
-    override suspend fun changePreferCompany(preferCompanyId: String): Result<Unit> =
-        waiterApiClient.editOwnWaiter(
-            EditOwnWaiterPayload(preferCompanyId = preferCompanyId)
-        ).apply {
-            waiterLocalRepository.update { current ->
-                current.apply { this.preferCompanyId = preferCompanyId }
-            }
-        }
+//    override suspend fun changePreferCompany(preferCompanyId: String): Result<Unit> =
+//        waiterApiClient.editOwnWaiter(
+//            EditOwnEmployeePayload(preferCompanyId = preferCompanyId)
+//        ).apply {
+//            waiterLocalRepository.update { current ->
+//                current.apply { this.preferCompanyId = preferCompanyId }
+//            }
+//        }
 }

@@ -11,7 +11,7 @@ class ProfileProps {
             ProfileProp("Отчество", employee.patronymic),
             ProfileProp(
                 "Текущая организация",
-                employee.companyList.find { it.id == waiter.preferCompanyId }?.title
+                employee.companyList.find { it.id == employee.preferredCompanyId }?.title
                     ?: "Нет"
             ),
             ProfileProp("Код официанта", waiter.code)

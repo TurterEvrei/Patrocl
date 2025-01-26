@@ -1,7 +1,7 @@
 package org.turter.patrocl.data.mapper
 
-import org.turter.patrocl.domain.dto.TableDto
-import org.turter.patrocl.domain.entity.TableLocal
+import org.turter.patrocl.data.dto.source.TableDto
+import org.turter.patrocl.data.local.entity.TableLocal
 import org.turter.patrocl.domain.model.source.Table
 
 fun TableDto.toTable(): Table = Table(

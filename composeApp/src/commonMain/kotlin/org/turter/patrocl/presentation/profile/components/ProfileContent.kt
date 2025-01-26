@@ -85,7 +85,7 @@ fun ProfileContent(
     }
 
     ChangePreferCompanyDialog(
-        currentCompany = employee.companyList.find { it.id == waiter.preferCompanyId },
+        currentCompany = employee.companyList.find { it.id == employee.preferredCompanyId },
         companies = employee.companyList,
         isExpanded = state.isChangePreferCompanyDialogOpen,
         isProcess = state.isChangingCompany,

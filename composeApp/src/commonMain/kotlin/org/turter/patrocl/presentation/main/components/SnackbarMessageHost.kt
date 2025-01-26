@@ -23,23 +23,23 @@ import org.turter.patrocl.presentation.error.ErrorType
 @Composable
 fun SnackbarMessageHost(
     paddingValues: PaddingValues = PaddingValues(),
-//    messageState: State<Message<String>>
-    message: Message<String>
+    messageState: State<Message<String>>
+//    message: Message<String>
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-//    val message by messageState
+    val message by messageState
 
-    val snackBarMessage = when (message) {
+    val snackBarMessage = when (val currentMessage = message) {
         is Message.Initial -> null
         is Message.Success -> SnackbarMessageData(
-            content = message.content,
+            content = currentMessage.content,
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
         )
         is Message.Error -> {
-            val errorType = ErrorType.from(message.exception)
+            val errorType = ErrorType.from(currentMessage.exception)
             SnackbarMessageData(
                 content = errorType.getMessage(),
                 containerColor = MaterialTheme.colorScheme.errorContainer,
@@ -47,7 +47,7 @@ fun SnackbarMessageHost(
             )
         }
         is Message.Content -> SnackbarMessageData(
-            content = message.content,
+            content = currentMessage.content,
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
         )
