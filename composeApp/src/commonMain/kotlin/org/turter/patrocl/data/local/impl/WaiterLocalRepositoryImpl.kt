@@ -4,9 +4,9 @@ import co.touchlab.kermit.Logger
 import io.realm.kotlin.ext.query
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.turter.patrocl.data.local.WaiterLocalRepository
 import org.turter.patrocl.data.local.config.RealmManager
 import org.turter.patrocl.data.local.entity.WaiterLocal
-import org.turter.patrocl.data.local.WaiterLocalRepository
 
 class WaiterLocalRepositoryImpl: WaiterLocalRepository {
     private val log = Logger.withTag("WaiterLocalRepositoryImpl")

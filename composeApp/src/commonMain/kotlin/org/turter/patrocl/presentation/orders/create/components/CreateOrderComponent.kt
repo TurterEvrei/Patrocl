@@ -1,6 +1,5 @@
 package org.turter.patrocl.presentation.orders.create.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,20 +21,17 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
 import org.turter.patrocl.presentation.components.FullscreenLoader
 import org.turter.patrocl.presentation.components.SwipeToDismissComponent
 import org.turter.patrocl.presentation.components.btn.ExpandableFAB
 import org.turter.patrocl.presentation.components.btn.FABItem
-import org.turter.patrocl.presentation.orders.common.EditNewOrderItemDialog
 import org.turter.patrocl.presentation.orders.common.InterceptedAddingDialog
 import org.turter.patrocl.presentation.orders.common.MenuSelectorComponent
 import org.turter.patrocl.presentation.orders.common.NewOrderItemCard
@@ -48,10 +44,11 @@ import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.RemoveNe
 import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.SelectNewOrderItem
 import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.SelectTable
 import org.turter.patrocl.presentation.orders.create.CreateOrderViewModel
-import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent
+import org.turter.patrocl.presentation.orders.edit.EditOrderScreen
+import org.turter.patrocl.presentation.orders.item.new.edit.EditNewOrderItemScreen
 import org.turter.patrocl.ui.icons.Table_restaurant
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateOrderComponent(
     vm: CreateOrderViewModel,
@@ -64,16 +61,14 @@ fun CreateOrderComponent(
     val selectedItem = state.getSelectedItem()
     val category = state.menuData.rootCategory
     val dishes = state.menuData.dishes
-    val modifiers = state.menuData.modifiers
     val tables = state.tables
     val selectedTable = state.selectedTable
     val isTablePickerOpened = state.isTablePickerOpen
     val isSaving = state.isSaving
 
+    val navigator = LocalNavigator.currentOrThrow
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberBottomSheetScaffoldState()
-
-    var isEditNewOrderItemDialogOpen by remember { mutableStateOf(false) }
 
     val fabItems = listOf(
         FABItem(
@@ -84,12 +79,18 @@ fun CreateOrderComponent(
         FABItem(
             icon = Icons.Default.Check,
             text = "Применить",
-            action = { vm.sendEvent(CreateOrderUiEvent.CreateAndOpenOrder) }
+            action = {
+                vm.sendEvent(CreateOrderUiEvent.CreateOrderAndGoTo {
+                    navigator.replace(
+                        EditOrderScreen(orderGuid = it.guid)
+                    )
+                })
+            }
         ),
         FABItem(
             icon = Icons.AutoMirrored.Filled.ArrowForward,
             text = "Создать",
-            action = { vm.sendEvent(CreateOrderUiEvent.CreateOrderAndGoToOrders) }
+            action = { vm.sendEvent(CreateOrderUiEvent.CreateOrderAndGoTo { navigator.pop() }) }
         )
     )
 
@@ -122,13 +123,22 @@ fun CreateOrderComponent(
                 showSelectedItemBar = isItemSelect,
                 selectedItem = selectedItem,
                 selectedTable = selectedTable,
-                onBack = { vm.sendEvent(CreateOrderUiEvent.BackToOrders) },
+                onBack = { navigator.pop() },
                 onTableOpen = { vm.sendEvent(CreateOrderUiEvent.OpenTablePicker) },
                 onMenuOpen = { coroutineScope.launch { scaffoldState.bottomSheetState.expand() } },
                 onClose = { vm.sendEvent(CreateOrderUiEvent.UnselectNewOrderItem) },
                 onMoveUp = { vm.sendEvent(CreateOrderUiEvent.MoveSelectedItemUp) },
                 onMoveDown = { vm.sendEvent(CreateOrderUiEvent.MoveSelectedItemDown) },
-                onInfo = { isEditNewOrderItemDialogOpen = true }
+                onInfo = {
+                    selectedItem?.let { item ->
+                        navigator.push(EditNewOrderItemScreen(
+                            item = selectedItem,
+                            menuData = state.menuData,
+                            onSave = { vm.sendEvent(CreateOrUpdateNewOrderItem(it)) },
+                            onDelete = { vm.sendEvent(RemoveNewOrderItem(item)) }
+                        ))
+                    }
+                }
             )
         },
         snackbarHost = { SnackbarHost(it) }
@@ -154,7 +164,7 @@ fun CreateOrderComponent(
             ) {
                 items(items = newOrderItems, key = { it.uuid }) { orderItem ->
                     SwipeToDismissComponent(
-                        modifier = Modifier.padding(top = 6.dp).animateItemPlacement(),
+                        modifier = Modifier.padding(top = 6.dp).animateItem(),
                         onStartToEnd = { vm.sendEvent(RemoveNewOrderItem(orderItem)) },
                         onEndToStart = { vm.sendEvent(RemoveNewOrderItem(orderItem)) }
                     ) {
@@ -190,15 +200,6 @@ fun CreateOrderComponent(
         selectedTable = selectedTable,
         onDismiss = { vm.sendEvent(CreateOrderUiEvent.CloseTablePicker) },
         onSelectTable = { vm.sendEvent(SelectTable(it)) }
-    )
-
-    EditNewOrderItemDialog(
-        expanded = isEditNewOrderItemDialogOpen,
-        orderItem = selectedItem,
-        allModifiers = modifiers,
-        allDishes = dishes,
-        onConfirm = { vm.sendEvent(CreateOrUpdateNewOrderItem(it)) },
-        onDismiss = { isEditNewOrderItemDialogOpen = false }
     )
 
     state.interceptedAdding?.let { intercepted ->

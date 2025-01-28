@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.turter.patrocl.data_mock.utils.EmployeeDataSupplier
 import org.turter.patrocl.domain.model.BindStatus
 import org.turter.patrocl.domain.model.FetchState
-import org.turter.patrocl.domain.model.enums.Specialization
 import org.turter.patrocl.domain.model.person.Employee
 import org.turter.patrocl.domain.service.EmployeeService
 
@@ -38,7 +37,11 @@ class EmployeeServiceMock : EmployeeService{
     }
 
     override suspend fun changePreferCompany(preferCompanyId: String): Result<Unit> {
-        TODO("Not yet implemented")
+        delay(1000)
+        _employeeStateFlow.value = FetchState.success(
+            DEFAULT_EMPLOYEE.copy(preferredCompanyId = preferCompanyId)
+        )
+        return Result.success(Unit)
     }
 
 

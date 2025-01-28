@@ -13,7 +13,6 @@ import org.turter.patrocl.domain.model.FetchState
 import org.turter.patrocl.domain.model.Message
 import org.turter.patrocl.domain.model.stoplist.NewStopListItem
 import org.turter.patrocl.domain.model.stoplist.StopList
-import org.turter.patrocl.domain.model.stoplist.StopListItem
 import org.turter.patrocl.domain.service.MessageService
 import org.turter.patrocl.domain.service.StopListService
 import kotlin.random.Random

@@ -16,13 +16,13 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import org.turter.patrocl.data.local.WaiterLocalRepository
 import org.turter.patrocl.data.mapper.toWaiterFromLocal
 import org.turter.patrocl.data.mapper.toWaiterLocalFromDto
-import org.turter.patrocl.domain.model.BindStatus
 import org.turter.patrocl.data.remote.client.WaiterApiClient
+import org.turter.patrocl.domain.model.BindStatus
 import org.turter.patrocl.domain.model.FetchState
 import org.turter.patrocl.domain.model.person.Waiter
-import org.turter.patrocl.data.local.WaiterLocalRepository
 import org.turter.patrocl.domain.service.WaiterService
 
 class WaiterServiceImpl(

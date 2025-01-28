@@ -17,10 +17,10 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.turter.patrocl.data.local.LocalSource
+import org.turter.patrocl.data.local.entity.TableLocal
 import org.turter.patrocl.data.mapper.toTableListFromLocal
 import org.turter.patrocl.data.mapper.toTableLocalList
 import org.turter.patrocl.data.remote.client.TableApiClient
-import org.turter.patrocl.data.local.entity.TableLocal
 import org.turter.patrocl.domain.model.DataStatus
 import org.turter.patrocl.domain.model.DataStatus.Empty
 import org.turter.patrocl.domain.model.DataStatus.Loading

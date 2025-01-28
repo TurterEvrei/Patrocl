@@ -3,14 +3,15 @@ package org.turter.patrocl.presentation.profile.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.turter.patrocl.presentation.profile.ProfileScreenState
-import org.turter.patrocl.presentation.profile.ProfileUiEvent
 import org.turter.patrocl.presentation.profile.ProfileUiEvent.CloseChangePreferCompanyDialog
 import org.turter.patrocl.presentation.profile.ProfileUiEvent.ConfirmChangingPreferCompany
 import org.turter.patrocl.presentation.profile.ProfileUiEvent.OpenChangePreferCompanyDialog
@@ -56,32 +57,44 @@ fun ProfileContent(
 
     val scrollState = rememberScrollState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-
-        ProfileTitle(employee = employee)
-
-        ProfileGroup(label = "Личная информация") {
-            props.map { prop ->
-                ProfileProperty(label = prop.name, value = prop.value)
-            }
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            ProfileTopAppBar(
+                name = employee.name,
+                positionTitle = employee.position.title,
+                onLogout = logout
+            )
         }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(scrollState),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+//
+//            ProfileTitle(employee = employee)
 
-        ProfileGroup(label = "Возможности") {
-            options.map { option ->
-                ProfileOptionComponent(
-                    label = option.title,
-                    isProcess = option.isProcess,
-                    onClick = option.action
-                )
+            ProfileGroup(label = "Личная информация") {
+                props.map { prop ->
+                    ProfileProperty(label = prop.name, value = prop.value)
+                }
             }
-        }
 
+            ProfileGroup(label = "Возможности") {
+                options.map { option ->
+                    ProfileOptionComponent(
+                        label = option.title,
+                        isProcess = option.isProcess,
+                        onClick = option.action
+                    )
+                }
+            }
+
+        }
     }
 
     ChangePreferCompanyDialog(

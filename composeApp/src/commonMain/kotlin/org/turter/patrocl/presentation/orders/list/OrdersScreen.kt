@@ -1,6 +1,5 @@
 package org.turter.patrocl.presentation.orders.list
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,7 +15,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,10 +22,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.getScreenModel
+import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.turter.patrocl.domain.model.person.Waiter
@@ -37,14 +34,14 @@ import org.turter.patrocl.presentation.orders.create.CreateOrderScreen
 import org.turter.patrocl.presentation.orders.edit.EditOrderScreen
 import org.turter.patrocl.presentation.orders.list.components.OrderCard
 import org.turter.patrocl.presentation.orders.list.components.OrdersHeader
+import org.turter.patrocl.presentation.orders.read.ReadOrderScreen
 
 class OrdersScreen(
     private val waiter: Waiter
 ) : Screen {
-    @OptIn(ExperimentalFoundationApi::class)
     @Composable
     override fun Content() {
-        val vm: OrdersViewModel = getScreenModel()
+        val vm: OrdersViewModel = koinScreenModel()
         val navigator = LocalNavigator.currentOrThrow
 
         var ordersFilter by remember { mutableStateOf(OrdersFilter()) }
@@ -59,7 +56,6 @@ class OrdersScreen(
             },
             floatingActionButton = {
                 FloatingActionButton(
-//                    modifier = Modifier.alpha(0.8f),
                     onClick = { navigator.push(CreateOrderScreen()) }
                 ) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = "Add icon")
@@ -88,10 +84,14 @@ class OrdersScreen(
                                 key = { it.guid }
                             ) { order ->
                                 OrderCard(
-                                    modifier = Modifier.animateItemPlacement(),
+                                    modifier = Modifier.animateItem(),
                                     order = order,
                                     onCardClick = {
-                                        navigator.push(EditOrderScreen(orderGuid = order.guid))
+                                        val orderGuid = order.guid
+                                        navigator.push(
+                                            if (order.bill) ReadOrderScreen(orderGuid = orderGuid)
+                                            else EditOrderScreen(orderGuid = orderGuid)
+                                        )
                                     }
                                 )
                             }

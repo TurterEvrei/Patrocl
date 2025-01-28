@@ -33,7 +33,7 @@ class OrderServiceImpl(
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    private val checkCurrentOrderFlow = MutableSharedFlow<Unit>(replay = 1)
+    private val checkCurrentOrderFlow = MutableSharedFlow<OrderActuator>(replay = 1)
 
     private val checkOrdersStateEvent = MutableSharedFlow<Unit>(replay = 1)
 
@@ -67,24 +67,32 @@ class OrderServiceImpl(
 
     override fun getOrderFlow(guid: String): StateFlow<FetchState<Order>> = flow {
         log.d { "Creating new orders flow for order with guid: $guid" }
-        checkCurrentOrderFlow.emit(Unit)
-        checkCurrentOrderFlow.collect {
-            emit(FetchState.loading())
-            log.d {
-                "Collect checkCurrentOrderFlow for order: $guid"
-            }
-            val result = orderApiClient.getOrderByGuid(guid).map { it.toOrder() }
-            result.fold(
-                onSuccess = { order ->
-                    log.d { "Get order by guid from api. Order name: ${order.name}" }
-                },
-                onFailure = { cause ->
-                    log.e { "Catch exception while getting order by guid: $cause" }
-                    messageService.setMessage(Message.error(cause))
+        checkCurrentOrderFlow.emit(OrderActuator.Check)
+        checkCurrentOrderFlow.collect { actuator ->
+            when(actuator) {
+                is OrderActuator.Check -> {
+                    emit(FetchState.loading())
+                    log.d {
+                        "Collect checkCurrentOrderFlow for order: $guid"
+                    }
+                    val result = orderApiClient.getOrderByGuid(guid).map { it.toOrder() }
+                    result.fold(
+                        onSuccess = { order ->
+                            log.d { "Get order by guid from api. Order name: ${order.name}" }
+                        },
+                        onFailure = { cause ->
+                            log.e { "Catch exception while getting order by guid: $cause" }
+                            messageService.setMessage(Message.error(cause))
+                        }
+                    )
+                    log.d { "Emit result: $result" }
+                    emit(FetchState.done(result))
                 }
-            )
-            log.d { "Emit result: $result" }
-            emit(FetchState.done(result))
+                is OrderActuator.Update -> {
+                    val order = actuator.order
+                    if (order.guid == guid) emit(FetchState.success(order))
+                }
+            }
         }
     }.stateIn(
         scope = coroutineScope,
@@ -96,6 +104,7 @@ class OrderServiceImpl(
         ordersStateFlow
 
     override suspend fun refreshOrders() = checkOrdersStateEvent.emit(Unit)
+    override suspend fun refreshCurrentOrder() = checkCurrentOrderFlow.emit(OrderActuator.Check)
 
     override suspend fun createOrder(
         table: Table,
@@ -135,6 +144,7 @@ class OrderServiceImpl(
         result.fold(
             onSuccess = { order ->
                 log.d { "Order updated: ${order.name}" }
+                checkCurrentOrderFlow.emit(OrderActuator.Update(order))
                 messageService.setMessage(Message.success("Order updated: ${order.name}"))
             },
             onFailure = { cause ->
@@ -155,8 +165,9 @@ class OrderServiceImpl(
             .removeItem(payload = payload.toRemoveItemsFromOrderPayload(orderGuid))
             .map { it.toOrder() }
         result.fold(
-            onSuccess = {
+            onSuccess = { order ->
                 log.d { "Success removing items: ${payload.dishes.map { it.name }}" }
+                checkCurrentOrderFlow.emit(OrderActuator.Update(order))
                 messageService.setMessage(
                     Message.success("Removing item: ${payload.dishes.count()} is successful")
                 )
@@ -180,9 +191,10 @@ class OrderServiceImpl(
             .removeItem(payload = payload.toRemoveItemsFromOrderPayload(orderGuid))
             .map { it.toOrder() }
         result.fold(
-            onSuccess = {
+            onSuccess = { order ->
                 log.d { "Success removing items: " +
                         "${payload.flatMap { it.dishes.map { dish -> dish.name } }}" }
+                checkCurrentOrderFlow.emit(OrderActuator.Update(order))
                 messageService.setMessage(
                     Message.success("Removing item: " +
                             "${payload.flatMap { it.dishes }.count()} is successful")
@@ -196,5 +208,10 @@ class OrderServiceImpl(
             }
         )
         return result
+    }
+
+    private sealed class OrderActuator {
+        data object Check: OrderActuator()
+        data class Update(val order: Order): OrderActuator()
     }
 }

@@ -2,13 +2,10 @@ package org.turter.patrocl.data_mock.utils
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.turter.patrocl.domain.model.stoplist.StopList
 import org.turter.patrocl.domain.model.stoplist.StopListItem
-import org.turter.patrocl.utils.now
-import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 

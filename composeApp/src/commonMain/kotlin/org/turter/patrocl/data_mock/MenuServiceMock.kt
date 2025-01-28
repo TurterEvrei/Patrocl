@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import org.turter.patrocl.data.mapper.menu.toDetailed
@@ -17,17 +16,12 @@ import org.turter.patrocl.domain.model.DataStatus
 import org.turter.patrocl.domain.model.FetchState
 import org.turter.patrocl.domain.model.FetchState.Finished
 import org.turter.patrocl.domain.model.menu.Category
-import org.turter.patrocl.domain.model.menu.CategoryDetailed
 import org.turter.patrocl.domain.model.menu.Dish
-import org.turter.patrocl.domain.model.menu.DishDetailed
 import org.turter.patrocl.domain.model.menu.DishModifier
 import org.turter.patrocl.domain.model.menu.MenuData
 import org.turter.patrocl.domain.model.menu.ModifiersGroup
-import org.turter.patrocl.domain.model.menu.ModifiersGroupDetailed
-import org.turter.patrocl.domain.model.stoplist.StopList
 import org.turter.patrocl.domain.model.stoplist.StopListItem
 import org.turter.patrocl.domain.service.MenuService
-import kotlin.coroutines.CoroutineContext
 
 class MenuServiceMock : MenuService {
     private val scope = CoroutineScope(Dispatchers.Default)

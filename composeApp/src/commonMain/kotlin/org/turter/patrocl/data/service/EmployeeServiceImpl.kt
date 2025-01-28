@@ -16,14 +16,14 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.turter.patrocl.data.dto.person.EditOwnEmployeePayload
+import org.turter.patrocl.data.local.LocalSource
+import org.turter.patrocl.data.local.entity.EmployeeLocal
 import org.turter.patrocl.data.mapper.toEmployeeFromLocal
 import org.turter.patrocl.data.mapper.toEmployeeLocalFromDto
-import org.turter.patrocl.domain.model.BindStatus
 import org.turter.patrocl.data.remote.client.EmployeeApiClient
-import org.turter.patrocl.data.local.entity.EmployeeLocal
+import org.turter.patrocl.domain.model.BindStatus
 import org.turter.patrocl.domain.model.FetchState
 import org.turter.patrocl.domain.model.person.Employee
-import org.turter.patrocl.data.local.LocalSource
 import org.turter.patrocl.domain.service.EmployeeService
 
 class EmployeeServiceImpl(

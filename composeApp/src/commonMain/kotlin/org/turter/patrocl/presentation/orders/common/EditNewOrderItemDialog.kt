@@ -1,7 +1,6 @@
 package org.turter.patrocl.presentation.orders.common
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -9,13 +8,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -104,14 +101,6 @@ fun EditNewOrderItemDialog(
                 currentModifiers = modifiers,
                 onOpenCreateCommentDialog = { isCommentCreateDialogOpened = true }
             )
-
-//            DialogComponentsDivider()
-//
-//            CommentsComponent(
-//                modifier = Modifier.weight(1f),
-//                comments = comments,
-//                onOpenCreateCommentDialog = { isCommentCreateDialogOpened = true }
-//            )
         }
 
         if (isCommentCreateDialogOpened) {
@@ -260,7 +249,7 @@ private fun ColumnScope.ModifiersComponent(
                     Column(
                         modifier = Modifier
                             .height(50.dp)
-                            .animateItemPlacement(),
+                            .animateItem(),
                     ) {
                         HorizontalDivider()
                         Spacer(Modifier.weight(1f))
@@ -278,7 +267,7 @@ private fun ColumnScope.ModifiersComponent(
                 items = currentModifiers,
                 key = { it.modifierId + it.content }
             ) { modifierItem ->
-                Column(modifier = Modifier.animateItemPlacement()) {
+                Column(modifier = Modifier.animateItem()) {
                     HorizontalDivider()
                     Row(
                         modifier = Modifier.fillMaxWidth(),

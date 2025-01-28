@@ -1,6 +1,5 @@
 package org.turter.patrocl.presentation.auth
 
-import org.turter.patrocl.domain.model.AuthState
 import org.turter.patrocl.domain.model.person.User
 
 sealed class AuthScreenState {

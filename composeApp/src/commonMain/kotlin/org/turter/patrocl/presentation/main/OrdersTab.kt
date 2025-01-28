@@ -25,7 +25,7 @@ data class OrdersTab(
             return remember {
                 TabOptions(
                     index = 1u,
-                    title = "Orders",
+                    title = "Заказы",
                     icon = painterIcon
                 )
             }

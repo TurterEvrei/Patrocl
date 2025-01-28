@@ -2,7 +2,6 @@ package org.turter.patrocl.presentation.orders.create
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import cafe.adriel.voyager.navigator.Navigator
 import co.touchlab.kermit.Logger
 import com.benasher44.uuid.Uuid
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,12 +20,10 @@ import org.turter.patrocl.presentation.error.ErrorType
 import org.turter.patrocl.presentation.orders.common.AddingWarningType
 import org.turter.patrocl.presentation.orders.common.InterceptedAddingDish
 import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.AddNewOrderItem
-import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.BackToOrders
 import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.CloseTablePicker
 import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.ConfirmInterceptedAdding
-import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.CreateAndOpenOrder
 import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.CreateOrUpdateNewOrderItem
-import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.CreateOrderAndGoToOrders
+import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.CreateOrderAndGoTo
 import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.IncreaseNewOrderItemQuantity
 import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.MoveSelectedItemDown
 import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.MoveSelectedItemUp
@@ -37,11 +34,8 @@ import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.RemoveNe
 import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.SelectNewOrderItem
 import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.SelectTable
 import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.UnselectNewOrderItem
-import org.turter.patrocl.presentation.orders.edit.EditOrderScreen
 
 sealed class CreateOrderUiEvent {
-    data object BackToOrders : CreateOrderUiEvent()
-
     data class SelectTable(val table: Table) : CreateOrderUiEvent()
     data object OpenTablePicker : CreateOrderUiEvent()
     data object CloseTablePicker : CreateOrderUiEvent()
@@ -67,8 +61,8 @@ sealed class CreateOrderUiEvent {
     data object MoveSelectedItemDown : CreateOrderUiEvent()
 
     data object RefreshData : CreateOrderUiEvent()
-    data object CreateOrderAndGoToOrders : CreateOrderUiEvent()
-    data object CreateAndOpenOrder : CreateOrderUiEvent()
+    data class CreateOrderAndGoTo(val action: (Order) -> Unit) : CreateOrderUiEvent()
+//    data object CreateAndOpenOrder : CreateOrderUiEvent()
 }
 
 class CreateOrderViewModel(
@@ -76,7 +70,6 @@ class CreateOrderViewModel(
     private val tableService: TableService,
     private val waiterService: WaiterService,
     private val orderService: OrderService,
-    private val navigator: Navigator
 ) : ScreenModel {
     private val log = Logger.withTag("CreateOrderViewModel")
 
@@ -102,12 +95,21 @@ class CreateOrderViewModel(
                 }
                 if (menu is Finished && tables is Finished && waiter is Finished) {
                     try {
-                        val res = CreateOrderScreenState.Main(
-                            menuData = menu.result.getOrThrow(),
-                            tables = tables.result.getOrThrow(),
-                            ownWaiter = waiter.result.getOrThrow(),
-                        )
-                        res
+                        val menuData = menu.result.getOrThrow()
+                        val tableList = tables.result.getOrThrow()
+                        val ownWaiter = waiter.result.getOrThrow()
+                        when(val currentState = _screenState.value) {
+                            is CreateOrderScreenState.Main -> currentState.copy(
+                                menuData = menuData,
+                                tables = tableList,
+                                ownWaiter = ownWaiter
+                            )
+                            else -> CreateOrderScreenState.Main(
+                                menuData = menuData,
+                                tables = tableList,
+                                ownWaiter = ownWaiter
+                            )
+                        }
                     } catch (e: Exception) {
                         log.e { "Catch exception in combine flows: $e" }
                         e.printStackTrace()
@@ -124,7 +126,6 @@ class CreateOrderViewModel(
 
     fun sendEvent(event: CreateOrderUiEvent) {
         when (event) {
-            is BackToOrders -> navigator.popUntilRoot()
             is SelectTable -> selectTable(event.table)
             is OpenTablePicker -> openTablePicker()
             is CloseTablePicker -> closeTablePicker()
@@ -146,8 +147,8 @@ class CreateOrderViewModel(
             is MoveSelectedItemUp -> moveSelectedItemUp()
             is MoveSelectedItemDown -> moveSelectedItemDown()
             is RefreshData -> refreshData()
-            is CreateOrderAndGoToOrders -> createOrderAndOpenOrdersList()
-            is CreateAndOpenOrder -> createAndOpenOrder()
+            is CreateOrderAndGoTo -> createOrder(event.action)
+//            is CreateAndOpenOrder -> createAndOpenOrder()
         }
     }
 
@@ -258,15 +259,15 @@ class CreateOrderViewModel(
         }
     }
 
-    private fun createOrderAndOpenOrdersList() {
-        log.d { "On create order and go to all orders" }
-        createOrder { navigator.popUntilRoot() }
-    }
-
-    private fun createAndOpenOrder() {
-        log.d { "On create order and go to created order" }
-        createOrder { navigator.replace(EditOrderScreen(orderGuid = it.guid)) }
-    }
+//    private fun createOrderAndThen() {
+//        log.d { "On create order and go to all orders" }
+//        createOrder { navigator.popUntilRoot() }
+//    }
+//
+//    private fun createAndOpenOrder() {
+//        log.d { "On create order and go to created order" }
+//        createOrder { navigator.replace(EditOrderScreen(orderGuid = it.guid)) }
+//    }
 
     private fun createOrder(onSuccess: (Order) -> Unit) {
         withMainState()?.let { state ->

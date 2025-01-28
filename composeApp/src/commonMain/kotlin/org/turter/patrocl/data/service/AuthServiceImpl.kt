@@ -19,6 +19,8 @@ import org.publicvalue.multiplatform.oidc.tokenstore.removeTokens
 import org.publicvalue.multiplatform.oidc.tokenstore.tokensFlow
 import org.publicvalue.multiplatform.oidc.types.Jwt
 import org.turter.patrocl.data.auth.AppAuth
+import org.turter.patrocl.data.local.LocalSource
+import org.turter.patrocl.data.local.WaiterLocalRepository
 import org.turter.patrocl.data.local.entity.EmployeeLocal
 import org.turter.patrocl.domain.exception.InvalidTokenException
 import org.turter.patrocl.domain.exception.InvalidUserFromTokenException
@@ -26,8 +28,6 @@ import org.turter.patrocl.domain.exception.NoTokensException
 import org.turter.patrocl.domain.exception.TokenExpiredException
 import org.turter.patrocl.domain.model.AuthState
 import org.turter.patrocl.domain.model.person.User
-import org.turter.patrocl.data.local.LocalSource
-import org.turter.patrocl.data.local.WaiterLocalRepository
 import org.turter.patrocl.domain.service.AuthService
 
 @OptIn(ExperimentalOpenIdConnect::class)

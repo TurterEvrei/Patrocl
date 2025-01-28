@@ -34,6 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import org.turter.patrocl.presentation.components.DateTimePickerModal
 import org.turter.patrocl.presentation.components.FullscreenLoader
 import org.turter.patrocl.presentation.components.SurfaceCard
@@ -45,6 +47,7 @@ fun CreateStopListItemComponent(
     vm: CreateStopListItemViewModel,
     state: CreateStopListItemScreenState.Main
 ) {
+    val navigator = LocalNavigator.currentOrThrow
     var isDishPickerOpened by remember { mutableStateOf(false) }
     var isDateTimePickerOpened by remember { mutableStateOf(false) }
 
@@ -52,7 +55,7 @@ fun CreateStopListItemComponent(
         topBar = {
             TopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = { vm.sendEvent(CreateStopListItemUiEvent.BackToList) }) {
+                    IconButton(onClick = { navigator.pop() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back icon"
@@ -80,7 +83,7 @@ fun CreateStopListItemComponent(
                         .align(Alignment.Center),
                     label = "Новая позиция",
                     actionLabel = "Создать",
-                    action = { vm.sendEvent(CreateStopListItemUiEvent.Create) }
+                    action = { vm.sendEvent(CreateStopListItemUiEvent.Create { navigator.pop() }) }
                 ) {
                     Column(
                         modifier = Modifier
