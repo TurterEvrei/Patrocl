@@ -1,6 +1,5 @@
 package org.turter.patrocl.presentation.components
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
@@ -16,7 +15,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import kotlinx.coroutines.flow.map
 
 @Composable
 fun FloatNaturalInput(
@@ -46,7 +44,7 @@ fun FloatNaturalInput(
         onValueChange = {
             quantity = when (val res = it.toFloatOrNull()) {
                 null -> if (it.isEmpty()) it else quantity
-                else -> if (res > 0 && validate(res)) {
+                else -> if (res >= 0 && validate(res)) {
                     onValueChange(res)
                     it
                 } else quantity

@@ -4,9 +4,9 @@ import co.touchlab.kermit.Logger
 import io.realm.kotlin.ext.query
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.turter.patrocl.data.local.LocalSource
 import org.turter.patrocl.data.local.config.RealmManager
 import org.turter.patrocl.data.local.entity.EmployeeLocal
-import org.turter.patrocl.data.local.LocalSource
 
 class EmployeeLocalSource: LocalSource<EmployeeLocal> {
     private val log = Logger.withTag("EmployeeLocalSource")

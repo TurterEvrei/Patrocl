@@ -18,16 +18,12 @@ sealed class EditOrderScreenState {
     data class Main(
         val order: Order,
         val menuData: MenuData,
-//        val tables: List<Table>,
         val ownWaiter: Waiter,
         val newOrderItems: SnapshotStateList<NewOrderItem> = mutableStateListOf(),
         val selected: Selected = Selected.None,
         val interceptedAdding: InterceptedAddingDish? = null,
         val isSaving: Boolean = false,
         val isRemoving: Boolean = false
-//        var expandedOrderItemDialog: Boolean = false,
-//        var orderItemForRemoving: SavedOrderItem? = null,
-//        var expandedConfirmRemovingOrderItem: Boolean = false
     ) : EditOrderScreenState() {
         fun getSelectedNewItem(): NewOrderItem? = when(selected) {
             is Selected.NewItem -> newOrderItems.find { it.uuid == selected.newItemUuid }
@@ -41,8 +37,6 @@ sealed class EditOrderScreenState {
             is Selected.SavedItems -> selected.items
             else -> null
         }
-
-        fun isAddingIntercepted() = interceptedAdding != null
     }
 
     data class Error(val errorType: ErrorType) : EditOrderScreenState()

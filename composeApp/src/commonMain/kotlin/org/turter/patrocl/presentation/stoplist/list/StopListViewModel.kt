@@ -2,7 +2,6 @@ package org.turter.patrocl.presentation.stoplist.list
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import cafe.adriel.voyager.navigator.Navigator
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +10,6 @@ import kotlinx.coroutines.launch
 import org.turter.patrocl.domain.model.FetchState
 import org.turter.patrocl.domain.service.StopListService
 import org.turter.patrocl.presentation.error.ErrorType
-import org.turter.patrocl.presentation.orders.edit.EditOrderScreenState
 
 sealed class StopListUiEvent {
     data class SelectItem(val id: String): StopListUiEvent()

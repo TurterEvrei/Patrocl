@@ -40,11 +40,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import org.turter.patrocl.presentation.components.DateTimePickerModal
 import org.turter.patrocl.presentation.components.FullscreenLoader
 import org.turter.patrocl.presentation.components.SurfaceCard
 import org.turter.patrocl.presentation.components.dialog.RemoveItemDialog
-import org.turter.patrocl.presentation.components.dialog.RemoveItemsDialog
 import org.turter.patrocl.utils.isSoon
 import org.turter.patrocl.utils.toFormatString
 
@@ -54,6 +55,8 @@ fun EditStopListItemComponent(
     vm: EditStopListItemViewModel,
     state: EditStopListItemScreenState.Main
 ) {
+    val navigator = LocalNavigator.currentOrThrow
+
     var isDateTimePickerOpened by remember { mutableStateOf(false) }
     var isConfirmRemoveDialogOpened by remember { mutableStateOf(false) }
     val originUntil = state.originalItem.until
@@ -62,7 +65,7 @@ fun EditStopListItemComponent(
         topBar = {
             TopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = { vm.sendEvent(EditStopListItemUiEvent.BackToList) }) {
+                    IconButton(onClick = { navigator.pop() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back icon"
@@ -98,7 +101,7 @@ fun EditStopListItemComponent(
                         .align(Alignment.Center),
                     label = "Позиция",
                     actionLabel = "Сохранить",
-                    action = { vm.sendEvent(EditStopListItemUiEvent.Save) },
+                    action = { vm.sendEvent(EditStopListItemUiEvent.Save { navigator.pop() } ) },
                 ) {
                     Column(
                         modifier = Modifier
@@ -235,7 +238,7 @@ fun EditStopListItemComponent(
         expanded = isConfirmRemoveDialogOpened,
         title = "Удалить данный элемент",
         onDismiss = { isConfirmRemoveDialogOpened = false },
-        onConfirm = { vm.sendEvent(EditStopListItemUiEvent.Delete) }
+        onConfirm = { vm.sendEvent(EditStopListItemUiEvent.Delete { navigator.pop() } ) }
     )
 
     if (isDateTimePickerOpened) DateTimePickerModal(

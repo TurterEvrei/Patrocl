@@ -1,6 +1,5 @@
 package org.turter.patrocl.domain.service
 
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import org.turter.patrocl.domain.model.Message
 

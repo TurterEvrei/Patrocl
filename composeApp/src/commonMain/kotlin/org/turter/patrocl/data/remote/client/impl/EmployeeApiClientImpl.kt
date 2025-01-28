@@ -7,13 +7,12 @@ import io.ktor.client.request.patch
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.turter.patrocl.data.dto.person.EditOwnEmployeePayload
-import org.turter.patrocl.data.remote.client.ApiEndpoint
-import org.turter.patrocl.data.remote.client.proceedRequest
-import org.turter.patrocl.data.remote.client.EmployeeApiClient
 import org.turter.patrocl.data.dto.person.EmployeeDto
+import org.turter.patrocl.data.remote.client.ApiEndpoint
+import org.turter.patrocl.data.remote.client.EmployeeApiClient
+import org.turter.patrocl.data.remote.client.proceedRequest
 
 class EmployeeApiClientImpl(
     private val httpClient: HttpClient

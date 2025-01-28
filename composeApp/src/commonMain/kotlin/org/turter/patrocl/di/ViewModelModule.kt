@@ -2,12 +2,16 @@ package org.turter.patrocl.di
 
 import cafe.adriel.voyager.navigator.Navigator
 import org.koin.dsl.module
+import org.turter.patrocl.domain.model.menu.MenuData
+import org.turter.patrocl.domain.model.order.NewOrderItem
 import org.turter.patrocl.domain.model.stoplist.StopListItem
 import org.turter.patrocl.presentation.auth.AuthViewModel
 import org.turter.patrocl.presentation.main.MainViewModel
 import org.turter.patrocl.presentation.orders.create.CreateOrderViewModel
 import org.turter.patrocl.presentation.orders.edit.EditOrderViewModel
+import org.turter.patrocl.presentation.orders.item.new.edit.EditNewOrderItemViewModel
 import org.turter.patrocl.presentation.orders.list.OrdersViewModel
+import org.turter.patrocl.presentation.orders.read.ReadOrderViewModel
 import org.turter.patrocl.presentation.profile.ProfileViewModel
 import org.turter.patrocl.presentation.stoplist.create.CreateStopListItemViewModel
 import org.turter.patrocl.presentation.stoplist.edit.EditStopListItemViewModel
@@ -30,24 +34,42 @@ val viewModelModule = module {
 
     factory { OrdersViewModel(orderService = get()) }
 
-    factory { (navigator: Navigator) ->
+    factory {
         CreateOrderViewModel(
             menuService = get(),
             tableService = get(),
             waiterService = get(),
-            orderService = get(),
-            navigator = navigator
+            orderService = get()
         )
     }
 
-    factory { (orderGuid: String, navigator: Navigator) ->
+    factory { (orderGuid: String) ->
         EditOrderViewModel(
             orderGuid = orderGuid,
             menuService = get(),
             tableService = get(),
             waiterService = get(),
+            orderService = get()
+        )
+    }
+
+    factory { (orderGuid: String, navigator: Navigator) ->
+        ReadOrderViewModel(
+            orderGuid = orderGuid,
             orderService = get(),
             navigator = navigator
+        )
+    }
+
+    factory { (originalItem: NewOrderItem,
+                  menuData: MenuData,
+                  onSave: (NewOrderItem) -> Unit,
+                  onDelete: (NewOrderItem) -> Unit) ->
+        EditNewOrderItemViewModel(
+            originalItem = originalItem,
+            menuData = menuData,
+            onSave = onSave,
+            onDelete = onDelete
         )
     }
 
@@ -64,19 +86,17 @@ val viewModelModule = module {
         StopListViewModel(stopListService = get())
     }
 
-    factory { (currentStopList: List<StopListItem>, navigator: Navigator) ->
+    factory { (currentStopList: List<StopListItem>) ->
         CreateStopListItemViewModel(
             currentStopList = currentStopList,
-            navigator = navigator,
             dishFetcher = get(),
             stopListService = get()
         )
     }
 
-    factory { (targetItem: StopListItem, navigator: Navigator) ->
+    factory { (targetItem: StopListItem) ->
         EditStopListItemViewModel(
             targetItem = targetItem,
-            navigator = navigator,
             stopListService = get()
         )
     }

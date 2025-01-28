@@ -6,7 +6,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
-import org.turter.patrocl.domain.model.person.Employee
 import org.turter.patrocl.domain.model.person.Employee.CompanyEmbedded
 import org.turter.patrocl.presentation.components.DropDownMenu
 import org.turter.patrocl.presentation.components.btn.LoadingButton

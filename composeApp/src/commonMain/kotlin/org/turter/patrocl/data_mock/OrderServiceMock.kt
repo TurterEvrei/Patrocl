@@ -7,10 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.delayFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import org.turter.patrocl.data_mock.utils.OrderDataSupplier
 import org.turter.patrocl.domain.model.FetchState
@@ -63,6 +60,10 @@ class OrderServiceMock(
         ordersFlow
 
     override suspend fun refreshOrders() {
+
+    }
+
+    override suspend fun refreshCurrentOrder() {
 
     }
 

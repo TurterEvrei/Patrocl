@@ -2,7 +2,6 @@ package org.turter.patrocl.presentation.orders.edit
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import cafe.adriel.voyager.navigator.Navigator
 import co.touchlab.kermit.Logger
 import com.benasher44.uuid.Uuid
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +19,6 @@ import org.turter.patrocl.presentation.error.ErrorType
 import org.turter.patrocl.presentation.orders.common.AddingWarningType
 import org.turter.patrocl.presentation.orders.common.InterceptedAddingDish
 import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.AddNewOrderItem
-import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.BackToOrders
 import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.ConfirmInterceptedAdding
 import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.CreateOrUpdateNewOrderItem
 import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.IncreaseNewOrderItemQuantity
@@ -28,25 +26,24 @@ import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.MoveSelected
 import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.MoveSelectedItemUp
 import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.RefreshData
 import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.RejectInterceptedAdding
-import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.RemoveNewOrderItem
 import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.RemoveAllSelectedSavedItems
+import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.RemoveNewOrderItem
 import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.RemoveSelectedSavedItem
-import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.SaveOrderAndContinue
-import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.SaveOrderAndGoToOrders
+import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.SaveOrder
+import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.SaveOrderAndThen
 import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.SelectNewOrderItem
 import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.SelectSavedItems
 import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.UnselectAllItems
 import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.UnselectSavedOrderItems
 
 sealed class EditOrderUiEvent {
-    data object BackToOrders : EditOrderUiEvent()
-
     data class AddNewOrderItem(
         val dishId: String,
         val dishName: String,
         val quantity: Float = 1f,
         val modifiers: List<NewOrderItem.Modifier> = emptyList()
     ) : EditOrderUiEvent()
+
     data object ConfirmInterceptedAdding : EditOrderUiEvent()
     data object RejectInterceptedAdding : EditOrderUiEvent()
 
@@ -62,12 +59,14 @@ sealed class EditOrderUiEvent {
     data class SelectNewOrderItem(val uuid: Uuid) : EditOrderUiEvent()
     data object UnselectAllItems : EditOrderUiEvent()
 
+//    data object OpenEditSelectedNewOrderItemScreen : EditOrderUiEvent()
+
     data object MoveSelectedItemUp : EditOrderUiEvent()
     data object MoveSelectedItemDown : EditOrderUiEvent()
 
     data object RefreshData : EditOrderUiEvent()
-    data object SaveOrderAndGoToOrders : EditOrderUiEvent()
-    data object SaveOrderAndContinue : EditOrderUiEvent()
+    data class SaveOrderAndThen(val action: () -> Unit) : EditOrderUiEvent()
+    data object SaveOrder : EditOrderUiEvent()
 }
 
 class EditOrderViewModel(
@@ -76,7 +75,7 @@ class EditOrderViewModel(
     private val tableService: TableService,
     private val waiterService: WaiterService,
     private val orderService: OrderService,
-    private val navigator: Navigator
+//    private val navigator: Navigator
 ) : ScreenModel {
     private val log = Logger.withTag("EditOrderViewModel")
 
@@ -103,13 +102,21 @@ class EditOrderViewModel(
                 if (order is Finished && menu is Finished && waiter is Finished) {
                     try {
                         val orderData = order.result.getOrThrow()
-//                        val tablesData = tables.result.getOrThrow()
-                        EditOrderScreenState.Main(
-                            order = orderData,
-                            menuData = menu.result.getOrThrow(),
-//                            tables = tablesData,
-                            ownWaiter = waiter.result.getOrThrow()
-                        )
+                        val menuData = menu.result.getOrThrow()
+                        val ownWaiter = waiter.result.getOrThrow()
+                        when (val currentState = _screenState.value) {
+                            is EditOrderScreenState.Main -> currentState.copy(
+                                order = orderData,
+                                menuData = menuData,
+                                ownWaiter = ownWaiter
+                            )
+
+                            else -> EditOrderScreenState.Main(
+                                order = orderData,
+                                menuData = menuData,
+                                ownWaiter = ownWaiter
+                            )
+                        }
                     } catch (e: Exception) {
                         log.e { "Catch exception in combine flows: $e" }
                         e.printStackTrace()
@@ -126,13 +133,13 @@ class EditOrderViewModel(
 
     fun sendEvent(event: EditOrderUiEvent) {
         when (event) {
-            is BackToOrders -> navigator.popUntilRoot()
             is AddNewOrderItem -> addNewOrderItem(
                 dishId = event.dishId,
                 dishName = event.dishName,
                 quantity = event.quantity,
                 modifiers = event.modifiers
             )
+
             is ConfirmInterceptedAdding -> confirmInterceptedAdding()
             is RejectInterceptedAdding -> cleanInterceptedAdding()
 
@@ -145,11 +152,12 @@ class EditOrderViewModel(
             is RemoveAllSelectedSavedItems -> removeAllSelectedSavedItems()
             is SelectNewOrderItem -> selectNewItem(event.uuid)
             is UnselectAllItems -> unselectAllItems()
+//            is OpenEditSelectedNewOrderItemScreen -> openEditSelectedNewOrderItem()
             is MoveSelectedItemUp -> moveSelectedItemUp()
             is MoveSelectedItemDown -> moveSelectedItemDown()
             is RefreshData -> refreshData()
-            is SaveOrderAndGoToOrders -> saveOrderAndOpenOrdersList()
-            is SaveOrderAndContinue -> saveNewOrderItems()
+            is SaveOrderAndThen -> saveOrderAndThen(action = event.action)
+            is SaveOrder -> saveNewOrderItems()
         }
     }
 
@@ -181,7 +189,7 @@ class EditOrderViewModel(
                 ?: newOrderItems.add(target)
         }
     }
-    
+
     private fun confirmInterceptedAdding() {
         withMainState()?.apply {
             interceptedAdding?.let { intercepted ->
@@ -228,6 +236,23 @@ class EditOrderViewModel(
     private fun unselectAllItems() = transformMainState {
         it.copy(selected = Selected.None)
     }
+
+//    private fun openEditSelectedNewOrderItem() {
+//        withMainState()?.apply {
+//            log.d { "Start open edit screen for new item: ${getSelectedNewItem()}" }
+//            getSelectedNewItem()?.let { item ->
+//                log.d { "Nav stack before open edit new item screen: ${navigator.items}" }
+//                navigator.push(
+//                    EditNewOrderItemScreen(
+//                        item = item,
+//                        menuData = menuData,
+//                        onSave = { createOrUpdateOrderItem(it) },
+//                        onDelete = { removeNewOrderItem(item) }
+//                    )
+//                )
+//            }
+//        }
+//    }
 
     private fun moveSelectedItemUp() = withMainState()?.let { state ->
         state.getSelectedNewItem()?.let { item ->
@@ -304,7 +329,7 @@ class EditOrderViewModel(
                 orderService.removeItemFromOrderSession(
                     orderGuid = orderGuid,
                     payload = item.copy(
-                        dishes = listOf(targetDish.copy(quantity = targetDish.quantity - quantity))
+                        dishes = listOf(targetDish.copy(quantity = targetDish.quantity))
                     )
                 ).onSuccess { unselectAllItems() }
                 setRemoving(false)
@@ -324,9 +349,9 @@ class EditOrderViewModel(
             }
         }
 
-    private fun saveOrderAndOpenOrdersList() {
+    private fun saveOrderAndThen(action: () -> Unit) {
         log.d { "On save order and go to all orders" }
-        addNewItemsToOrder { navigator.popUntilRoot() }
+        addNewItemsToOrder { action() }
     }
 
     private fun saveNewOrderItems() {
@@ -351,11 +376,14 @@ class EditOrderViewModel(
     private fun refreshData() {
         _screenState.value = EditOrderScreenState.Loading
         coroutineScope.launch {
-            tableService.refreshTablesFromApi()
+            orderService.refreshCurrentOrder()
         }
-        coroutineScope.launch {
-            menuService.refreshMenuFromApi()
-        }
+//        coroutineScope.launch {
+//            tableService.refreshTablesFromApi()
+//        }
+//        coroutineScope.launch {
+//            menuService.refreshMenuFromApi()
+//        }
     }
 
     private fun setLoading(value: Boolean) {

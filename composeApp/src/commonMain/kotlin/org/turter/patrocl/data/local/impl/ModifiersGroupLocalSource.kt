@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.turter.patrocl.data.local.LocalSource
 import org.turter.patrocl.data.local.config.RealmManager
-import org.turter.patrocl.data.local.entity.CategoryLocal
 import org.turter.patrocl.data.local.entity.ModifiersGroupLocal
 
 class ModifiersGroupLocalSource: LocalSource<ModifiersGroupLocal> {

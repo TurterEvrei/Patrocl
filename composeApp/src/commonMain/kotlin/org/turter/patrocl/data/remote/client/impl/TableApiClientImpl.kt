@@ -4,10 +4,10 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import kotlinx.serialization.json.Json
-import org.turter.patrocl.data.remote.client.ApiEndpoint
-import org.turter.patrocl.data.remote.client.proceedRequest
-import org.turter.patrocl.data.remote.client.TableApiClient
 import org.turter.patrocl.data.dto.source.TableDto
+import org.turter.patrocl.data.remote.client.ApiEndpoint
+import org.turter.patrocl.data.remote.client.TableApiClient
+import org.turter.patrocl.data.remote.client.proceedRequest
 
 class TableApiClientImpl(
     private val httpClient: HttpClient

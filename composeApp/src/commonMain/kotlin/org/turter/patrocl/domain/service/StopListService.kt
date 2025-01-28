@@ -5,7 +5,6 @@ import kotlinx.datetime.LocalDateTime
 import org.turter.patrocl.domain.model.FetchState
 import org.turter.patrocl.domain.model.stoplist.NewStopListItem
 import org.turter.patrocl.domain.model.stoplist.StopList
-import org.turter.patrocl.domain.model.stoplist.StopListItem
 
 interface StopListService {
 

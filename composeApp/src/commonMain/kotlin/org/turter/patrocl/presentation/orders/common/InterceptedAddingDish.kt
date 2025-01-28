@@ -1,6 +1,5 @@
 package org.turter.patrocl.presentation.orders.common
 
-import org.turter.patrocl.domain.model.menu.DishDetailed
 import org.turter.patrocl.domain.model.order.NewOrderItem
 
 data class InterceptedAddingDish(

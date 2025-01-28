@@ -1,6 +1,5 @@
 package org.turter.patrocl.presentation.orders.edit.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +29,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
 import org.turter.patrocl.domain.model.order.Order
 import org.turter.patrocl.presentation.components.FullscreenLoader
@@ -37,8 +38,6 @@ import org.turter.patrocl.presentation.components.SwipeToDismissComponent
 import org.turter.patrocl.presentation.components.btn.ExpandableFAB
 import org.turter.patrocl.presentation.components.btn.FABItem
 import org.turter.patrocl.presentation.components.dialog.RemoveItemsDialog
-import org.turter.patrocl.presentation.orders.common.AddingWarningType
-import org.turter.patrocl.presentation.orders.common.EditNewOrderItemDialog
 import org.turter.patrocl.presentation.orders.common.InterceptedAddingDialog
 import org.turter.patrocl.presentation.orders.common.MenuSelectorComponent
 import org.turter.patrocl.presentation.orders.common.NewOrderItemCard
@@ -51,8 +50,9 @@ import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.SelectSavedI
 import org.turter.patrocl.presentation.orders.edit.EditOrderUiEvent.UnselectSavedOrderItems
 import org.turter.patrocl.presentation.orders.edit.EditOrderViewModel
 import org.turter.patrocl.presentation.orders.edit.Selected
+import org.turter.patrocl.presentation.orders.item.new.edit.EditNewOrderItemScreen
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditOrderComponent(
     vm: EditOrderViewModel,
@@ -64,19 +64,19 @@ fun EditOrderComponent(
     val selectedNewItem = state.getSelectedNewItem()
     val category = state.menuData.rootCategory
     val dishes = state.menuData.dishes
-    val modifiers = state.menuData.modifiers
     val selected = state.selected
+
+    val navigator = LocalNavigator.currentOrThrow
 
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberBottomSheetScaffoldState()
 
-    var isEditNewOrderItemDialogOpen by remember { mutableStateOf(false) }
     var isSavedItemRemoveDialogOpen by remember { mutableStateOf(false) }
 
     val defaultTopAppBarState = EditOrderTopAppBarState.Default(
         orderName = originOrder.name,
         waiterName = originOrder.waiter.name,
-        onBack = { vm.sendEvent(EditOrderUiEvent.BackToOrders) },
+        onBack = { navigator.pop() },
         onMenuOpen = { coroutineScope.launch { scaffoldState.bottomSheetState.expand() } }
     )
     val topAppBarState = when (selected) {
@@ -89,7 +89,13 @@ fun EditOrderComponent(
                     onClose = { vm.sendEvent(EditOrderUiEvent.UnselectAllItems) },
                     onMoveUp = { vm.sendEvent(EditOrderUiEvent.MoveSelectedItemUp) },
                     onMoveDown = { vm.sendEvent(EditOrderUiEvent.MoveSelectedItemDown) },
-                    onInfo = { isEditNewOrderItemDialogOpen = true }
+//                    onInfo = { isEditNewOrderItemDialogOpen = true }
+                    onInfo = { navigator.push(EditNewOrderItemScreen(
+                        item = item,
+                        menuData = state.menuData,
+                        onSave = { vm.sendEvent(EditOrderUiEvent.CreateOrUpdateNewOrderItem(it)) },
+                        onDelete = { vm.sendEvent(EditOrderUiEvent.RemoveNewOrderItem(item)) }
+                    )) }
                 )
             } ?: defaultTopAppBarState
         }
@@ -115,12 +121,14 @@ fun EditOrderComponent(
         FABItem(
             icon = Icons.Default.Check,
             text = "Применить",
-            action = { vm.sendEvent(EditOrderUiEvent.SaveOrderAndContinue) }
+            action = { vm.sendEvent(EditOrderUiEvent.SaveOrder) }
         ),
         FABItem(
             icon = Icons.AutoMirrored.Filled.ArrowForward,
             text = "Сохранить",
-            action = { vm.sendEvent(EditOrderUiEvent.SaveOrderAndGoToOrders) }
+            action = {
+                vm.sendEvent(EditOrderUiEvent.SaveOrderAndThen(action = { navigator.pop() }))
+            }
         )
     )
 
@@ -174,7 +182,7 @@ fun EditOrderComponent(
                 item(key = "s-0") {
                     OrderItemsGroupsDivider(
                         modifier = Modifier
-                            .animateItemPlacement()
+                            .animateItem()
                             .padding(top = 6.dp, start = 2.dp, end = 2.dp),
                         title = "Сохраненные позиции"
                     )
@@ -187,60 +195,65 @@ fun EditOrderComponent(
                     item(key = session.uni) {
                         SessionCard(
                             modifier = Modifier
-                                .animateItemPlacement()
+                                .animateItem()
                                 .padding(horizontal = 8.dp),
                             session = session,
                             select = allSessionItemsSelected,
                             onLongClick = {
                                 vm.sendEvent(
                                     if (allSessionItemsSelected) UnselectSavedOrderItems(session)
-                                    else SelectSavedItems(session)
+                                    else SelectSavedItems(
+                                        session.copy(
+                                            dishes = session.dishes.filter { it.quantity > 0 }
+                                        )
+                                    )
                                 )
                             }
                         )
                     }
-                    items(items = session.dishes, key = { it.getKey(session.uni) }) { orderItem ->
-                        if (orderItem.quantity > 0) {
-                            val isSelected = state.getAllSelectedSavedItems()
-                                ?.find { it.uni == session.uni }
-                                ?.dishes
-                                ?.any { it.uni == orderItem.uni }
-                                ?: false
-                            SavedOrderItemCard(
-                                modifier = Modifier
-                                    .animateItemPlacement()
-                                    .padding(horizontal = 16.dp),
-                                item = orderItem,
-                                select = isSelected,
-                                onLongClick = {
-                                    val target = session.copy(dishes = listOf(orderItem))
-                                    vm.sendEvent(
-                                        if (isSelected) UnselectSavedOrderItems(session = target)
-                                        else SelectSavedItems(session = target)
+                    items(
+                        items = session.dishes.filter { it.quantity > 0 }.toList(),
+                        key = { it.getKey(session.uni) }
+                    ) { orderItem ->
+                        val isSelected = state.getAllSelectedSavedItems()
+                            ?.find { it.uni == session.uni }
+                            ?.dishes
+                            ?.any { it.uni == orderItem.uni }
+                            ?: false
+                        SavedOrderItemCard(
+                            modifier = Modifier
+                                .animateItem()
+                                .padding(horizontal = 16.dp),
+                            item = orderItem,
+                            select = isSelected,
+                            onLongClick = {
+                                val target = session.copy(dishes = listOf(orderItem))
+                                vm.sendEvent(
+                                    if (isSelected) UnselectSavedOrderItems(session = target)
+                                    else SelectSavedItems(session = target)
+                                )
+                            },
+                            onClick = {
+                                vm.sendEvent(
+                                    EditOrderUiEvent.AddNewOrderItem(
+                                        dishId = orderItem.id,
+                                        dishName = orderItem.name
                                     )
-                                },
-                                onClick = {
-                                    vm.sendEvent(
-                                        EditOrderUiEvent.AddNewOrderItem(
-                                            dishId = orderItem.id,
-                                            dishName = orderItem.name
-                                        )
-                                    )
-                                }
-                            )
-                        }
+                                )
+                            }
+                        )
                     }
                 }
                 item(key = "s-new") {
                     OrderItemsGroupsDivider(
-                        modifier = Modifier.animateItemPlacement()
+                        modifier = Modifier.animateItem()
                             .padding(horizontal = 4.dp),
                         title = "Новые позиции"
                     )
                 }
                 items(items = newOrderItems, key = { it.uuid }) { orderItem ->
                     SwipeToDismissComponent(
-                        modifier = Modifier.animateItemPlacement()
+                        modifier = Modifier.animateItem()
                             .padding(horizontal = 16.dp),
                         onStartToEnd = { vm.sendEvent(EditOrderUiEvent.RemoveNewOrderItem(orderItem)) },
                         onEndToStart = { vm.sendEvent(EditOrderUiEvent.RemoveNewOrderItem(orderItem)) }
@@ -281,15 +294,6 @@ fun EditOrderComponent(
 
     FullscreenLoader(isShown = state.isSaving || state.isRemoving)
 
-    EditNewOrderItemDialog(
-        expanded = isEditNewOrderItemDialogOpen,
-        orderItem = selectedNewItem,
-        allModifiers = modifiers,
-        allDishes = dishes,
-        onConfirm = { vm.sendEvent(EditOrderUiEvent.CreateOrUpdateNewOrderItem(it)) },
-        onDismiss = { isEditNewOrderItemDialogOpen = false }
-    )
-
     state.interceptedAdding?.let { intercepted ->
         InterceptedAddingDialog(
             warningType = intercepted.warningType,
@@ -298,7 +302,7 @@ fun EditOrderComponent(
         )
     }
 
-    when(selected) {
+    when (selected) {
         is Selected.SavedItems -> {
             selected.withSingleItem()?.let { item ->
                 val targetDish = item.dishes.first()
@@ -310,13 +314,14 @@ fun EditOrderComponent(
                     onConfirm = { vm.sendEvent(EditOrderUiEvent.RemoveSelectedSavedItem(it)) },
                     onDismiss = { isSavedItemRemoveDialogOpen = false }
                 )
-            }?: RemoveItemsDialog(
+            } ?: RemoveItemsDialog(
                 expanded = isSavedItemRemoveDialogOpen,
-                count = selected.items.count(),
+                count = selected.items.flatMap { it.dishes }.count(),
                 onConfirm = { vm.sendEvent(EditOrderUiEvent.RemoveAllSelectedSavedItems) },
                 onDismiss = { isSavedItemRemoveDialogOpen = false }
             )
         }
+
         else -> {}
     }
 }

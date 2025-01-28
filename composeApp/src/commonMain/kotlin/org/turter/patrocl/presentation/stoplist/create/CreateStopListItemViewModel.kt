@@ -2,7 +2,6 @@ package org.turter.patrocl.presentation.stoplist.create
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import cafe.adriel.voyager.navigator.Navigator
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,17 +17,15 @@ import org.turter.patrocl.presentation.error.ErrorType
 import org.turter.patrocl.utils.now
 
 sealed class CreateStopListItemUiEvent {
-    data object BackToList : CreateStopListItemUiEvent()
     data class SelectDish(val id: String) : CreateStopListItemUiEvent()
     data class SetRemainCount(val count: Int) : CreateStopListItemUiEvent()
     data class SetUntil(val value: LocalDateTime?) : CreateStopListItemUiEvent()
-    data object Create : CreateStopListItemUiEvent()
+    data class Create(val action: () -> Unit) : CreateStopListItemUiEvent()
     data object Refresh : CreateStopListItemUiEvent()
 }
 
 class CreateStopListItemViewModel(
     private val currentStopList: List<StopListItem>,
-    private val navigator: Navigator,
     private val dishFetcher: DishFetcher,
     private val stopListService: StopListService
 ) : ScreenModel {
@@ -58,17 +55,12 @@ class CreateStopListItemViewModel(
 
     fun sendEvent(event: CreateStopListItemUiEvent) {
         when (event) {
-            is CreateStopListItemUiEvent.BackToList -> backToStopList()
             is CreateStopListItemUiEvent.SelectDish -> selectDish(id = event.id)
             is CreateStopListItemUiEvent.SetRemainCount -> setRemainCount(count = event.count)
             is CreateStopListItemUiEvent.SetUntil -> setUntil(value = event.value)
-            is CreateStopListItemUiEvent.Create -> createItem()
+            is CreateStopListItemUiEvent.Create -> createItem(event.action)
             is CreateStopListItemUiEvent.Refresh -> refresh()
         }
-    }
-
-    private fun backToStopList() {
-        navigator.pop()
     }
 
     private fun selectDish(id: String) {
@@ -83,7 +75,7 @@ class CreateStopListItemViewModel(
         transformMainState { it.copy(until = value?.takeIf { date -> date > LocalDateTime.now() }) }
     }
 
-    private fun createItem() {
+    private fun createItem(action: () -> Unit) {
         withMainState()?.apply {
             if (isDishNotInStopList(selectedDishId) && dishes.any { it.id == selectedDishId })
                 coroutineScope.launch {
@@ -94,7 +86,7 @@ class CreateStopListItemViewModel(
                             remainingCount = remainCount,
                             until = until
                         )
-                    ).onSuccess { navigator.pop() }
+                    ).onSuccess { action() }
                     setCreating(false)
                 }
         }

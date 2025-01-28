@@ -47,49 +47,49 @@ fun DishPickerModal(
         }
         .toList()
 
-        FullscreenDialog(
-            icon = { Icon(imageVector = Restaurant_menu, contentDescription = "Menu icon") },
-            label = "Выбор блюда",
-            content = {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    SearchTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(40.dp),
-                        value = searchString,
-                        onValueChange = { searchString = it },
-                        placeholder = { Text(text = "Название...") },
-                        textColor = MaterialTheme.colorScheme.onSurface,
-                        colors = OutlinedTextFieldDefaults.colors()
-                    )
+    FullscreenDialog(
+        icon = { Icon(imageVector = Restaurant_menu, contentDescription = "Menu icon") },
+        label = "Выбор блюда",
+        content = {
+            Column(modifier = Modifier.fillMaxSize()) {
+                SearchTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp),
+                    value = searchString,
+                    onValueChange = { searchString = it },
+                    placeholder = { Text(text = "Название...") },
+                    textColor = MaterialTheme.colorScheme.onSurface,
+                    colors = OutlinedTextFieldDefaults.colors()
+                )
 
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .padding(horizontal = 4.dp, vertical = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(items = filteredDishes, key = { it.id }) { dish ->
-                            DishPickerElement(
-                                selected = dish.id == newSelectedDishId,
-                                enabled = stopList.none { it.dishId == dish.id },
-                                name = dish.name,
-                                onClick = { newSelectedDishId = dish.id }
-                            )
-                        }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(items = filteredDishes, key = { it.id }) { dish ->
+                        DishPickerElement(
+                            selected = dish.id == newSelectedDishId,
+                            enabled = stopList.none { it.dishId == dish.id },
+                            name = dish.name,
+                            onClick = { newSelectedDishId = dish.id }
+                        )
                     }
                 }
-            },
-            onDismiss = onDismiss,
-            confirmEnabled = dishes.any { it.id == newSelectedDishId },
-            onConfirm = {
-                newSelectedDishId.let {
-                    onSelectDish(it)
-                    onDismiss()
-                }
             }
-        )
+        },
+        onDismiss = onDismiss,
+        confirmEnabled = dishes.any { it.id == newSelectedDishId },
+        onConfirm = {
+            newSelectedDishId.let {
+                onSelectDish(it)
+                onDismiss()
+            }
+        }
+    )
 }
 
 @Composable

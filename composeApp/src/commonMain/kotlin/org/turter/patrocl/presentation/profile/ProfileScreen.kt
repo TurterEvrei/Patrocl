@@ -2,13 +2,12 @@ package org.turter.patrocl.presentation.profile
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.getScreenModel
+import cafe.adriel.voyager.koin.koinScreenModel
 import org.turter.patrocl.presentation.components.CircularLoader
 import org.turter.patrocl.presentation.error.ErrorComponent
 import org.turter.patrocl.presentation.error.ErrorType
@@ -20,7 +19,7 @@ data class ProfileScreen(
 ): Screen {
     @Composable
     override fun Content() {
-        val vm: ProfileViewModel = getScreenModel()
+        val vm: ProfileViewModel = koinScreenModel()
 
         val screenState by vm.screenState.collectAsState()
 

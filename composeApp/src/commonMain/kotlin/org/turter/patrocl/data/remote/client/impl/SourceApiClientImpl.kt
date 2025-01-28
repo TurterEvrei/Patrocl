@@ -4,13 +4,13 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import kotlinx.serialization.json.Json
-import org.turter.patrocl.data.remote.client.ApiEndpoint
-import org.turter.patrocl.data.remote.client.proceedRequest
-import org.turter.patrocl.data.remote.client.SourceApiClient
 import org.turter.patrocl.data.dto.source.CategoryDto
 import org.turter.patrocl.data.dto.source.DishDto
 import org.turter.patrocl.data.dto.source.ModifierDto
 import org.turter.patrocl.data.dto.source.ModifiersGroupDto
+import org.turter.patrocl.data.remote.client.ApiEndpoint
+import org.turter.patrocl.data.remote.client.SourceApiClient
+import org.turter.patrocl.data.remote.client.proceedRequest
 
 class SourceApiClientImpl(
     private val httpClient: HttpClient

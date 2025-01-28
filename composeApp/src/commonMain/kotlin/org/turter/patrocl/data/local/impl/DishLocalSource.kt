@@ -4,10 +4,10 @@ import co.touchlab.kermit.Logger
 import io.realm.kotlin.ext.query
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.turter.patrocl.data.local.LocalSource
 import org.turter.patrocl.data.local.config.RealmManager
 import org.turter.patrocl.data.local.entity.DishLocal
 import org.turter.patrocl.domain.exception.EmptyLocalDataException
-import org.turter.patrocl.data.local.LocalSource
 
 class DishLocalSource: LocalSource<List<DishLocal>> {
     private val log = Logger.withTag("DishLocalSource")

@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import org.turter.patrocl.presentation.profile.ProfileScreen
@@ -15,7 +16,10 @@ data class ProfileTab(
 ): Tab {
     @Composable
     override fun Content() {
-        Navigator(ProfileScreen(logout = logout))
+        Navigator(
+            screen = ProfileScreen(logout = logout),
+            disposeBehavior = NavigatorDisposeBehavior(disposeNestedNavigators = false, disposeSteps = false)
+        )
     }
 
     override val options: TabOptions
@@ -25,7 +29,7 @@ data class ProfileTab(
             return remember {
                 TabOptions(
                     index = 2u,
-                    title = "Profile",
+                    title = "Профиль",
                     icon = iconPainter
                 )
             }

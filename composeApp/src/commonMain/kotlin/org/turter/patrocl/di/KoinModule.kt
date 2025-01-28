@@ -1,7 +1,5 @@
 package org.turter.patrocl.di
 
-import androidx.compose.runtime.Composable
-import org.koin.compose.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module

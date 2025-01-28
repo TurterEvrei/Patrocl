@@ -1,6 +1,5 @@
 package org.turter.patrocl.data.mapper.order
 
-import org.turter.patrocl.data.dto.order.request.OrderItemPayload
 import org.turter.patrocl.data.dto.order.request.OrderSessionPayload
 import org.turter.patrocl.data.dto.order.request.RemoveItemsFromOrderPayload
 import org.turter.patrocl.data.dto.order.response.OrderDto

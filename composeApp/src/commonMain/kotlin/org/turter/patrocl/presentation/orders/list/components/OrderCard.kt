@@ -33,8 +33,9 @@ fun OrderCard(
     onCardClick: (String) -> Unit
 ) {
     val cardContainerColor by animateColorAsState(
-        targetValue = if (order.bill) CardDefaults.cardColors().disabledContainerColor
-        else CardDefaults.cardColors().containerColor,
+        targetValue = if (order.bill) MaterialTheme.colorScheme.surfaceContainerLow
+//        else CardDefaults.cardColors().containerColor,
+        else MaterialTheme.colorScheme.surfaceContainerHigh,
         animationSpec = tween(durationMillis = 500)
     )
 
