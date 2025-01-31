@@ -1,7 +1,7 @@
 package org.turter.patrocl.presentation.orders.list
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,7 +27,6 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import org.turter.patrocl.domain.model.person.Waiter
 import org.turter.patrocl.presentation.components.CircularLoader
 import org.turter.patrocl.presentation.error.ErrorComponent
 import org.turter.patrocl.presentation.orders.create.CreateOrderScreen
@@ -36,9 +35,7 @@ import org.turter.patrocl.presentation.orders.list.components.OrderCard
 import org.turter.patrocl.presentation.orders.list.components.OrdersHeader
 import org.turter.patrocl.presentation.orders.read.ReadOrderScreen
 
-class OrdersScreen(
-    private val waiter: Waiter
-) : Screen {
+class OrdersScreen : Screen {
     @Composable
     override fun Content() {
         val vm: OrdersViewModel = koinScreenModel()
@@ -62,14 +59,14 @@ class OrdersScreen(
                 }
             }
         ) { paddingValues ->
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
                 when (val currentState = vm.screenState.collectAsState().value) {
                     is OrdersScreenState.Content -> {
-                        val orders = ordersFilter.filter(orders = currentState.orders, waiter = waiter)
+                        val orders = ordersFilter.filter(orders = currentState.orders, waiter = currentState.waiter)
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(2),
                             contentPadding = PaddingValues(

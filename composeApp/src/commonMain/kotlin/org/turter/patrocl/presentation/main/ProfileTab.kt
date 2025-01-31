@@ -11,15 +11,10 @@ import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import org.turter.patrocl.presentation.profile.ProfileScreen
 
-data class ProfileTab(
-    val logout: () -> Unit
-): Tab {
+object ProfileTab: Tab {
     @Composable
     override fun Content() {
-        Navigator(
-            screen = ProfileScreen(logout = logout),
-            disposeBehavior = NavigatorDisposeBehavior(disposeNestedNavigators = false, disposeSteps = false)
-        )
+        Navigator(ProfileScreen())
     }
 
     override val options: TabOptions

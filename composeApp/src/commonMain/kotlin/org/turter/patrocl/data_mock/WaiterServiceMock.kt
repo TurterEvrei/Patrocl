@@ -11,8 +11,9 @@ import org.turter.patrocl.domain.model.person.Waiter
 import org.turter.patrocl.domain.service.WaiterService
 
 class WaiterServiceMock: WaiterService {
+    private val DEFAULT_WAITER = WaiterDataSupplier.getWaiter()
 
-    private val waiterFetchState = FetchState.success(WaiterDataSupplier.getWaiter())
+    private val waiterFetchState = FetchState.success(DEFAULT_WAITER)
 
     private val waiterFlow = MutableStateFlow(waiterFetchState)
 
@@ -30,8 +31,10 @@ class WaiterServiceMock: WaiterService {
         waiterFlow.value = waiterFetchState
     }
 
-    override suspend fun updateWaiterFromRemote() {
+    override suspend fun updateWaiterFromRemote(): Result<Waiter> {
         waiterBindStatus.value = BindStatus.Loading
         delay(300)
-        waiterFlow.value = waiterFetchState    }
+        waiterFlow.value = waiterFetchState
+        return Result.success(DEFAULT_WAITER)
+    }
 }

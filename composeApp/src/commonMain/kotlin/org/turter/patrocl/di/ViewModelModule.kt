@@ -32,7 +32,7 @@ val viewModelModule = module {
         )
     }
 
-    factory { OrdersViewModel(orderService = get()) }
+    factory { OrdersViewModel(orderService = get(), waiterService = get()) }
 
     factory {
         CreateOrderViewModel(
@@ -78,7 +78,8 @@ val viewModelModule = module {
             waiterService = get(),
             employeeService = get(),
             menuService = get(),
-            tableService = get()
+            tableService = get(),
+            authService = get()
         )
     }
 

@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import org.turter.patrocl.domain.model.DataStatus
 import org.turter.patrocl.domain.model.FetchState.Finished
 import org.turter.patrocl.domain.model.person.Employee.CompanyEmbedded
+import org.turter.patrocl.domain.service.AuthService
 import org.turter.patrocl.domain.service.EmployeeService
 import org.turter.patrocl.domain.service.MenuService
 import org.turter.patrocl.domain.service.TableService
@@ -30,9 +31,11 @@ sealed class ProfileUiEvent {
     data object UpdateMenuFromRemote: ProfileUiEvent()
     data object UpdateTablesFromRemote: ProfileUiEvent()
     data object RefreshProfileInfoFromRemote: ProfileUiEvent()
+    data class Logout(val toWelcomeScreen: () -> Unit): ProfileUiEvent()
 }
 
 class ProfileViewModel(
+    private val authService: AuthService,
     private val waiterService: WaiterService,
     private val employeeService: EmployeeService,
     private val menuService: MenuService,
@@ -90,6 +93,7 @@ class ProfileViewModel(
             is UpdateMenuFromRemote -> updateMenuFromRemote()
             is UpdateTablesFromRemote -> updateTablesFromRemote()
             is RefreshProfileInfoFromRemote -> refreshProfileInfoFromRemote()
+            is ProfileUiEvent.Logout -> logout(event.toWelcomeScreen)
         }
     }
 
@@ -133,6 +137,14 @@ class ProfileViewModel(
         _screenState.value = ProfileScreenState.Loading
         waiterService.updateWaiterFromRemote()
         employeeService.updateEmployeeFromRemote()
+    }
+
+    private fun logout(toWelcomeScreen: () -> Unit) {
+        coroutineScope.launch {
+            toWelcomeScreen()
+            authService.logout()
+//                .onSuccess { toWelcomeScreen() }
+        }
     }
 
     private fun execInContent(action: ProfileScreenState.Content.() -> Unit) {

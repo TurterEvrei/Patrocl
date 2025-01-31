@@ -14,7 +14,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         @SuppressLint("StaticFieldLeak")
-        val codeAuthFlowFactory = AndroidCodeAuthFlowFactory(useWebView = true)
+        val codeAuthFlowFactory = AndroidCodeAuthFlowFactory(useWebView = true, webViewEpheremalSession = true)
     }
 
     @OptIn(ExperimentalOpenIdConnect::class)

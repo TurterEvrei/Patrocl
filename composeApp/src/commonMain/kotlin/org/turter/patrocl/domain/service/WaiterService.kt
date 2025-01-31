@@ -9,5 +9,5 @@ interface WaiterService {
     fun getOwnWaiterStateFlow(): StateFlow<FetchState<Waiter>>
     fun getOwnWaiterBindStatus(): StateFlow<BindStatus>
     suspend fun checkWaiter()
-    suspend fun updateWaiterFromRemote()
+    suspend fun updateWaiterFromRemote(): Result<Waiter>
 }

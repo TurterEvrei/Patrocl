@@ -51,9 +51,9 @@ fun ModifiersGroup.toDetailed(
     val result = ModifiersGroupDetailed(
         id = this.id,
         guid = this.guid,
-        code = this.id,
-        name = this.id,
-        status = this.id,
+        code = this.code,
+        name = this.name,
+        status = this.status,
         parent = parent,
         childList = emptyList(),
         modifiers = allModifiers

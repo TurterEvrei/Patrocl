@@ -31,11 +31,13 @@ class AuthServiceMock : AuthService {
 
     }
 
-    override suspend fun authenticate() {
+    override suspend fun authenticate(): Result<Unit> {
         _authState.value = AuthState.Authorized(user = DEFAULT_USER)
+        return Result.success(Unit)
     }
 
-    override suspend fun logout() {
+    override suspend fun logout(): Result<Unit> {
         _authState.value = AuthState.NotAuthorized(RuntimeException("Not authorized"))
+        return Result.success(Unit)
     }
 }

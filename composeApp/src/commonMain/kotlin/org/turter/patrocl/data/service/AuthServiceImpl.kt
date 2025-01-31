@@ -5,11 +5,11 @@ import io.ktor.client.HttpClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import org.publicvalue.multiplatform.oidc.ExperimentalOpenIdConnect
 import org.publicvalue.multiplatform.oidc.ktor.clearTokens
@@ -22,6 +22,7 @@ import org.turter.patrocl.data.auth.AppAuth
 import org.turter.patrocl.data.local.LocalSource
 import org.turter.patrocl.data.local.WaiterLocalRepository
 import org.turter.patrocl.data.local.entity.EmployeeLocal
+import org.turter.patrocl.domain.exception.AuthorizeException
 import org.turter.patrocl.domain.exception.InvalidTokenException
 import org.turter.patrocl.domain.exception.InvalidUserFromTokenException
 import org.turter.patrocl.domain.exception.NoTokensException
@@ -29,6 +30,8 @@ import org.turter.patrocl.domain.exception.TokenExpiredException
 import org.turter.patrocl.domain.model.AuthState
 import org.turter.patrocl.domain.model.person.User
 import org.turter.patrocl.domain.service.AuthService
+import org.turter.patrocl.domain.service.EmployeeService
+import org.turter.patrocl.domain.service.WaiterService
 
 @OptIn(ExperimentalOpenIdConnect::class)
 class AuthServiceImpl(
@@ -36,7 +39,9 @@ class AuthServiceImpl(
     private val httpClient: HttpClient,
     private val tokenStore: TokenStore,
     private val waiterLocalRepository: WaiterLocalRepository,
-    private val employeeLocalSource: LocalSource<EmployeeLocal>
+    private val employeeLocalSource: LocalSource<EmployeeLocal>,
+    private val employeeService: EmployeeService,
+    private val waiterService: WaiterService
 ) : AuthService {
     private val log = Logger.withTag("AuthService")
 
@@ -44,46 +49,92 @@ class AuthServiceImpl(
 
     private val tokensFlow = tokenStore.tokensFlow
 
-    private val authStateFlow = flow<AuthState> {
-        log.d { "Creating auth flow" }
-        tokensFlow.collect { tokens ->
-            log.d { "Collecting last from tokens flow: $tokens" }
-            try {
-                if (tokens != null) {
-                    if (tokens.isAccessTokenValid().isSuccess) {
-                        log.d { "Access token is valid - emit AuthState.Authorized" }
-                        emit(AuthState.Authorized(tokens.extractUser()))
-                    } else {
-                        tokens.isRefreshTokenValid().fold(
-                            onSuccess = { refreshToken ->
-                                log.d { "Refresh token is valid - start refreshing tokens" }
-                                refreshTokens(refreshToken)
-                            },
-                            onFailure = { cause ->
-                                log.d {
-                                    "Refresh token is invalid - emit AuthState.NotAuthorized. " +
-                                            "Cause: $cause"
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Initial)
+
+    init {
+        coroutineScope.launch {
+            log.d { "Creating auth flow" }
+            tokensFlow.collect { tokens ->
+                log.d { "Collecting last from tokens flow: $tokens" }
+                try {
+                    if (tokens != null) {
+                        if (tokens.isAccessTokenValid().isSuccess) {
+                            val user = tokens.extractUser()
+                            tokens.permissionsValid().fold(
+                                onSuccess = {
+                                    when (_authState.value) {
+                                        is AuthState.Authorized -> {
+                                            log.d { "Access token is valid " +
+                                                    "- emit AuthState.Authorized" }
+                                            _authState.value = AuthState.Authorized(user)
+                                        }
+
+                                        else -> {
+                                            log.d { "Current auth state is not authorize " +
+                                                    "- start checking employee" }
+                                            employeeService.updateEmployeeFromRemote().fold(
+                                                onSuccess = { emp ->
+                                                    log.d { "User employee: $emp" }
+                                                    log.d { "Start checking waiter" }
+                                                    waiterService.updateWaiterFromRemote().fold(
+                                                        onSuccess = { waiter ->
+                                                            log.d { "User waiter: $waiter" }
+                                                            _authState.value =
+                                                                AuthState.Authorized(user)
+                                                        },
+                                                        onFailure = { cause ->
+                                                            log.d { "User waiter not found" }
+                                                            _authState.value =
+                                                                AuthState.NoBindWaiter(
+                                                                    user,
+                                                                    emp,
+                                                                    cause
+                                                                )
+                                                        }
+                                                    )
+                                                },
+                                                onFailure = { cause ->
+                                                    log.d { "User employee not found" }
+                                                    _authState.value =
+                                                        AuthState.NoBindEmployee(user, cause)
+                                                }
+                                            )
+                                        }
+                                    }
+                                },
+                                onFailure = { cause ->
+                                    log.d { "Permission denied for token: ${tokens.accessToken}" }
+                                    _authState.value = AuthState.Forbidden(user, cause)
                                 }
-                                emit(AuthState.NotAuthorized(cause))
-                            }
-                        )
+                            )
+                        } else {
+                            tokens.isRefreshTokenValid().fold(
+                                onSuccess = { refreshToken ->
+                                    log.d { "Refresh token is valid - start refreshing tokens" }
+                                    refreshTokens(refreshToken)
+                                },
+                                onFailure = { cause ->
+                                    log.d {
+                                        "Refresh token is invalid - emit AuthState.NotAuthorized. " +
+                                                "Cause: $cause"
+                                    }
+                                    _authState.value = AuthState.NotAuthorized(cause)
+                                }
+                            )
+                        }
+                    } else {
+                        log.d { "Tokens from flow is null - emit AuthState.NotAuthorized" }
+                        _authState.value = AuthState.NotAuthorized(NoTokensException())
                     }
-                } else {
-                    log.d { "Tokens from flow is null - emit AuthState.NotAuthorized" }
-                    emit(AuthState.NotAuthorized(NoTokensException()))
+                } catch (e: Exception) {
+                    log.e { "Catch exception while collecting tokens from store. Exception: $e" }
+                    _authState.value = AuthState.NotAuthorized(e)
                 }
-            } catch (e: Exception) {
-                log.e { "Catch exception while collecting tokens from store. Exception: $e" }
-                emit(AuthState.NotAuthorized(e))
             }
         }
-    }.stateIn(
-        scope = coroutineScope,
-        started = SharingStarted.Lazily,
-        initialValue = AuthState.Initial
-    )
+    }
 
-    override fun getAuthStateFlow(): StateFlow<AuthState> = authStateFlow
+    override fun getAuthStateFlow(): StateFlow<AuthState> = _authState.asStateFlow()
 
     override suspend fun updateTokenIfExpired() {
         tokensFlow.first()?.let { tokens ->
@@ -98,9 +149,9 @@ class AuthServiceImpl(
         }
     }
 
-    override suspend fun authenticate() {
+    override suspend fun authenticate(): Result<Unit> {
         log.d { "Start authentication" }
-        try {
+        return try {
             val res = appAuth.startAuthentication()
             tokenStore.saveTokens(
                 accessToken = res.access_token,
@@ -108,29 +159,40 @@ class AuthServiceImpl(
                 idToken = res.id_token
             )
             log.d { "Authentication complete, new tokens is saved. Tokens: $res" }
+            Result.success(Unit)
         } catch (e: Exception) {
             log.e { "Catch exception while authenticate. Exception: $e" }
             e.printStackTrace()
+            Result.failure(e)
         }
     }
 
-    override suspend fun logout() {
+    override suspend fun logout(): Result<Unit> {
         log.d { "Starting logout" }
         tokenStore.getIdToken()?.let { idToken ->
             log.d { "Id token: $idToken" }
-            appAuth.endSession(idToken).fold(
-                onSuccess = {
-                    httpClient.clearTokens()
-                    tokenStore.removeTokens()
-                    waiterLocalRepository.cleanUp()
-                    employeeLocalSource.cleanUp()
-                    log.d { "Logout is complete" }
-                },
-                onFailure = { cause ->
-                    log.e { "Fail to logout. Cause: $cause" }
-                }
-            )
+            try {
+                appAuth.endSession(idToken).fold(
+                    onSuccess = {
+                        log.d { "End session is complete" }
+                    },
+                    onFailure = { cause ->
+                        log.e { "Fail to end session. Cause: $cause" }
+                    }
+                )
+            } catch (e: Exception) {
+                log.e { "Catch exception while end session: $e" }
+            } finally {
+                log.d { "Clean up local tokens, waiter and employee" }
+                tokenStore.removeTokens()
+                httpClient.clearTokens()
+                waiterLocalRepository.cleanUp()
+                employeeLocalSource.cleanUp()
+                log.d { "Logout is complete" }
+                return Result.success(Unit)
+            }
         }
+        return Result.failure(RuntimeException("No id token"))
     }
 
     private suspend fun refreshTokens(refreshToken: String) {
@@ -167,6 +229,38 @@ class AuthServiceImpl(
                 cur = currentTime
             )
         )
+    }
+
+    private fun OauthTokens.permissionsValid(): Result<String> {
+        val parsed = Jwt.parse(accessToken)
+        try {
+            val realmAccess = parsed.payload
+                .additionalClaims["realm_access"] as Map<String, List<Any>>
+            return realmAccess.get("roles")?.let { data ->
+                val roles = data.map { it.toString().removeSurrounding("\"") }.toList()
+                log.d { "Roles from access token: $roles" }
+                val requiredRoles = listOf(
+                    "read_orders",
+                    "write_orders",
+                    "read_stop_list",
+                    "write_stop_list"
+                )
+                if (roles.containsAll(requiredRoles)) {
+                    log.d { "Required permissions are present" }
+                    Result.success(accessToken)
+                } else {
+                    log.d { "Not all required permissions include" }
+                    Result.failure(
+                        AuthorizeException(
+                            "No required permissions. Required: $requiredRoles. Current: $roles"
+                        )
+                    )
+                }
+            } ?: Result.failure(AuthorizeException("No roles in token: $accessToken"))
+        } catch (e: Exception) {
+            log.e { "Catching exception while parsing token roles: $e" }
+            return Result.failure(e)
+        }
     }
 
     private fun OauthTokens.extractUser(): User =

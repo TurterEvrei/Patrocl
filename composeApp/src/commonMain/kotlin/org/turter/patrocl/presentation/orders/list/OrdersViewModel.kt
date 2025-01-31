@@ -4,9 +4,11 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.turter.patrocl.domain.model.FetchState
 import org.turter.patrocl.domain.service.OrderService
+import org.turter.patrocl.domain.service.WaiterService
 import org.turter.patrocl.presentation.error.ErrorType
 
 sealed class OrdersUiEvent {
@@ -14,7 +16,8 @@ sealed class OrdersUiEvent {
 }
 
 class OrdersViewModel(
-    private val orderService: OrderService
+    private val orderService: OrderService,
+    private val waiterService: WaiterService
 ) : ScreenModel {
 
     private val coroutineScope = screenModelScope
@@ -25,25 +28,25 @@ class OrdersViewModel(
 
     init {
         coroutineScope.launch {
-            orderService.getActiveOrdersStateFlow()
-                .collect { fetchState ->
-                    when (fetchState) {
-                        is FetchState.Finished -> {
-                            _screenState.emit(
-                                fetchState.result.fold(
-                                    onSuccess = { list ->
-                                        OrdersScreenState.Content(orders = list.sortedBy { it.name })
-                                    },
-                                    onFailure = {
-                                        OrdersScreenState.Error(errorType = ErrorType.from(it))
-                                    }
-                                )
-                            )
-                        }
-
-                        else -> OrdersScreenState.Loading
+            combine(
+                orderService.getActiveOrdersStateFlow(),
+                waiterService.getOwnWaiterStateFlow()
+            ) { fetchedOrders, fetchedWaiter ->
+                if (fetchedOrders is FetchState.Finished && fetchedWaiter is FetchState.Finished) {
+                    try {
+                        OrdersScreenState.Content(
+                            orders = fetchedOrders.result.getOrThrow().sortedBy { it.name },
+                            waiter = fetchedWaiter.result.getOrThrow()
+                        )
+                    } catch (e: Exception) {
+                        OrdersScreenState.Error(errorType = ErrorType.from(e))
                     }
+                } else {
+                    OrdersScreenState.Loading
                 }
+            }.collect { newState ->
+                _screenState.value = newState
+            }
         }
     }
 
