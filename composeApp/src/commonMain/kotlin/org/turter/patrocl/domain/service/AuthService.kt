@@ -6,6 +6,6 @@ import org.turter.patrocl.domain.model.AuthState
 interface AuthService {
     fun getAuthStateFlow(): StateFlow<AuthState>
     suspend fun updateTokenIfExpired()
-    suspend fun authenticate()
-    suspend fun logout()
+    suspend fun authenticate(): Result<Unit>
+    suspend fun logout(): Result<Unit>
 }

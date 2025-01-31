@@ -1,5 +1,7 @@
 package org.turter.patrocl.data.auth
 
+import io.ktor.client.plugins.timeout
+import io.ktor.http.encodeURLParameter
 import io.ktor.http.isSuccess
 import org.publicvalue.multiplatform.oidc.OpenIdConnectClient
 import org.publicvalue.multiplatform.oidc.appsupport.CodeAuthFlowFactory
@@ -22,7 +24,8 @@ class AppAuth(
 
     suspend fun endSession(idToken: String): Result<Unit> {
         val res = client.endSession(idToken = idToken) {
-            url.parameters.append("post_logout_redirect_uri", "turter.app.waiter.mobile://logout_callback")
+            url.parameters.append("post_logout_redirect_uri", "turter.app.waiter.mobile://logout_callback".encodeURLParameter())
+            timeout { requestTimeoutMillis = 3000 }
         }
         return if (res.isSuccess()) Result.success(Unit)
         else Result.failure(EndSessionFailureHttpStatusCode(res.value))

@@ -11,7 +11,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import org.turter.patrocl.presentation.auth.LogoutCallback
+import org.turter.patrocl.presentation.auth.WelcomeScreen
+import org.turter.patrocl.presentation.auth.logout
 import org.turter.patrocl.presentation.profile.ProfileScreenState
+import org.turter.patrocl.presentation.profile.ProfileUiEvent
 import org.turter.patrocl.presentation.profile.ProfileUiEvent.CloseChangePreferCompanyDialog
 import org.turter.patrocl.presentation.profile.ProfileUiEvent.ConfirmChangingPreferCompany
 import org.turter.patrocl.presentation.profile.ProfileUiEvent.OpenChangePreferCompanyDialog
@@ -23,11 +29,11 @@ import org.turter.patrocl.presentation.profile.ProfileViewModel
 @Composable
 fun ProfileContent(
     vm: ProfileViewModel,
-    state: ProfileScreenState.Content,
-    logout: () -> Unit
+    state: ProfileScreenState.Content
 ) {
     val employee = state.employee
     val waiter = state.waiter
+    val navigator = LocalNavigator.currentOrThrow
 
     val props = ProfileProps.from(
         waiter = waiter,
@@ -51,7 +57,8 @@ fun ProfileContent(
         ),
         ProfileOption(
             title = "Выйти",
-            action = logout
+//            action = { vm.sendEvent(ProfileUiEvent.Logout { navigator.replaceAll(WelcomeScreen()) }) }
+            action = { navigator.logout() }
         )
     )
 
@@ -63,7 +70,8 @@ fun ProfileContent(
             ProfileTopAppBar(
                 name = employee.name,
                 positionTitle = employee.position.title,
-                onLogout = logout
+//                onLogout = { vm.sendEvent(ProfileUiEvent.Logout { navigator.replaceAll(WelcomeScreen()) }) }
+                onLogout = { navigator.logout() }
             )
         }
     ) { innerPadding ->

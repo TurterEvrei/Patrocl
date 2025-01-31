@@ -14,13 +14,10 @@ import org.turter.patrocl.presentation.error.ErrorType
 import org.turter.patrocl.presentation.profile.ProfileUiEvent.RefreshProfileInfoFromRemote
 import org.turter.patrocl.presentation.profile.components.ProfileContent
 
-data class ProfileScreen(
-    val logout: () -> Unit
-): Screen {
+class ProfileScreen: Screen {
     @Composable
     override fun Content() {
         val vm: ProfileViewModel = koinScreenModel()
-
         val screenState by vm.screenState.collectAsState()
 
         Box(
@@ -30,8 +27,7 @@ data class ProfileScreen(
             when (val currentState = screenState) {
                 is ProfileScreenState.Content -> ProfileContent(
                     vm = vm,
-                    state = currentState,
-                    logout = logout
+                    state = currentState
                 )
 
                 is ProfileScreenState.Error -> ErrorComponent(

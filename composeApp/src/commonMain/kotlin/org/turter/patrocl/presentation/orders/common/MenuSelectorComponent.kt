@@ -63,20 +63,6 @@ fun MenuSelectorComponent(
             .padding(horizontal = 8.dp)
     ) {
         Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Меню", fontWeight = FontWeight.Medium)
-            }
-            HorizontalDivider(
-                modifier = Modifier
-                    .padding(vertical = 8.dp)
-                    .align(Alignment.CenterHorizontally),
-                thickness = 1.dp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
             SearchTextField(
                 modifier = Modifier
                     .height(ButtonDefaults.MinHeight)
@@ -94,8 +80,12 @@ fun MenuSelectorComponent(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 if (backStack.isNotEmpty()) item {
-                    FilledTonalButton(
+                    Button(
                         shape = RoundedCornerShape(4.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
                         onClick = { currentCategory = backStack.removeLast() }
                     ) {
                         Icon(
@@ -108,13 +98,17 @@ fun MenuSelectorComponent(
                     items = currentCategory.childList,
                     key = { it.guid }
                 ) { category ->
-                    FilledTonalButton(
+                    Button(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             backStack.addLast(currentCategory)
                             currentCategory = category
                         },
-                        shape = RoundedCornerShape(4.dp)
+                        shape = RoundedCornerShape(4.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     ) {
                         Text(text = category.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }

@@ -30,10 +30,11 @@ class EmployeeServiceMock : EmployeeService{
         _employeeStateFlow.value = FetchState.success(DEFAULT_EMPLOYEE)
     }
 
-    override suspend fun updateEmployeeFromRemote() {
+    override suspend fun updateEmployeeFromRemote(): Result<Employee> {
         delay(1000)
         _bindStatusStateFlow.value = BindStatus.Bind
         _employeeStateFlow.value = FetchState.success(DEFAULT_EMPLOYEE)
+        return Result.success(DEFAULT_EMPLOYEE)
     }
 
     override suspend fun changePreferCompany(preferCompanyId: String): Result<Unit> {

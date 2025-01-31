@@ -79,7 +79,9 @@ val dataModule = module {
             httpClient = get(),
             tokenStore = get(),
             waiterLocalRepository = get(),
-            employeeLocalSource = get(named("employeeLocalSource"))
+            employeeLocalSource = get(named("employeeLocalSource")),
+            employeeService = get(),
+            waiterService = get()
         )
     }
 

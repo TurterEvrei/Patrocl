@@ -9,6 +9,6 @@ interface EmployeeService {
     fun getOwnEmployeeStateFlow(): StateFlow<FetchState<Employee>>
     fun getOwnEmployeeBindStatusStateFlow(): StateFlow<BindStatus>
     suspend fun checkEmployee()
-    suspend fun updateEmployeeFromRemote()
+    suspend fun updateEmployeeFromRemote(): Result<Employee>
     suspend fun changePreferCompany(preferCompanyId: String): Result<Unit>
 }

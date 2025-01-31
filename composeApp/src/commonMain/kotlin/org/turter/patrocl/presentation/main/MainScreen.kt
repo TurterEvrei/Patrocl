@@ -48,12 +48,13 @@ class MainScreen : Screen {
         ) { state ->
             when (state) {
                 is MainScreenState.Content -> {
+                    val ordersTab = OrdersTab(waiter = state.waiter)
                     val tabs = listOf(
                         StopListTab,
-                        OrdersTab(waiter = state.waiter),
-                        ProfileTab(logout = { vm.sendEvent(MainUiEvent.Logout) })
+                        ordersTab,
+                        ProfileTab
                     )
-                    TabNavigator(tab = OrdersTab(waiter = state.waiter)) {
+                    TabNavigator(tab = ordersTab) {
                         Scaffold(
                             bottomBar = {
                                 NavigationBar {
@@ -61,7 +62,9 @@ class MainScreen : Screen {
                                 }
                             }
                         ) { paddingValues ->
-                            Box(modifier = Modifier.padding(paddingValues)) {
+                            Box(
+                                modifier = Modifier.padding(paddingValues)
+                            ) {
                                 CurrentTab()
                                 SnackbarMessageHost(
                                     messageState = state.messageState.collectAsState()

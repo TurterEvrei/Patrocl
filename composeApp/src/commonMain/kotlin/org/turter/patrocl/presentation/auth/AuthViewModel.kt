@@ -10,46 +10,64 @@ import org.turter.patrocl.domain.model.AuthState
 import org.turter.patrocl.domain.service.AuthService
 
 sealed class AuthUiEvent {
-    data object Login: AuthUiEvent()
-    data object Logout: AuthUiEvent()
+    data object Login : AuthUiEvent()
+    data class Logout(val navigate: () -> Unit) : AuthUiEvent()
 }
 
 class AuthViewModel(
     private val authService: AuthService
-): ScreenModel {
-    private val _screenState = MutableStateFlow<AuthScreenState>(AuthScreenState.Initial)
+) : ScreenModel {
+    private val _screenState = MutableStateFlow<WelcomeScreenState>(WelcomeScreenState.Initial)
 
-    val screenState: StateFlow<AuthScreenState> = _screenState.asStateFlow()
+    val screenState: StateFlow<WelcomeScreenState> = _screenState.asStateFlow()
 
     init {
         screenModelScope.launch {
             authService.getAuthStateFlow()
                 .collect { authState ->
-                    _screenState.value = when(authState) {
-                        is AuthState.Authorized -> AuthScreenState.Authorized(user = authState.user)
-                        is AuthState.NotAuthorized -> AuthScreenState.NotAuthorized(cause = authState.cause)
-                        else -> AuthScreenState.Loading
+                    _screenState.value = when (authState) {
+                        is AuthState.Authorized -> WelcomeScreenState.Authorized(user = authState.user)
+                        is AuthState.Forbidden -> WelcomeScreenState.Forbidden(
+                            authState.user,
+                            authState.cause
+                        )
+
+                        is AuthState.NoBindEmployee -> WelcomeScreenState.NoBindEmployee(
+                            authState.user,
+                            authState.cause
+                        )
+
+                        is AuthState.NoBindWaiter -> WelcomeScreenState.NoBindWaiter(
+                            authState.user,
+                            authState.employee,
+                            authState.cause
+                        )
+
+                        is AuthState.NotAuthorized -> WelcomeScreenState.NotAuthorized(cause = authState.cause)
+                        else -> WelcomeScreenState.Loading
                     }
                 }
         }
     }
 
     fun sendEvent(event: AuthUiEvent) {
-        when(event) {
+        when (event) {
             is AuthUiEvent.Login -> login()
-            is AuthUiEvent.Logout -> logout()
+            is AuthUiEvent.Logout -> logout(event.navigate)
         }
     }
 
     private fun login() {
         screenModelScope.launch {
             authService.authenticate()
+//                .onSuccess { toMainScreen() }
         }
     }
 
-    private fun logout() {
+    private fun logout(navigate: () -> Unit) {
         screenModelScope.launch {
             authService.logout()
+                .onSuccess { navigate() }
         }
     }
 

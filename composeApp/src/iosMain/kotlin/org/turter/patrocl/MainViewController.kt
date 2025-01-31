@@ -11,7 +11,7 @@ import org.turter.patrocl.di.initKoin
 fun MainViewController() = ComposeUIViewController(
         configure = {
                 initKoin(
-                        authFlowFactory = IosCodeAuthFlowFactory(),
+                        authFlowFactory = IosCodeAuthFlowFactory(ephemeralBrowserSession = true),
                         tokenStore = IosKeychainTokenStore()
                 )
         }

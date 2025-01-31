@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.turter.patrocl.data.local.WaiterLocalRepository
+import org.turter.patrocl.data.mapper.toWaiterFromDto
 import org.turter.patrocl.data.mapper.toWaiterFromLocal
 import org.turter.patrocl.data.mapper.toWaiterLocalFromDto
 import org.turter.patrocl.data.remote.client.WaiterApiClient
@@ -95,7 +96,7 @@ class WaiterServiceImpl(
         refreshWaiterFlow.emit(Unit)
     }
 
-    override suspend fun updateWaiterFromRemote() {
+    override suspend fun updateWaiterFromRemote(): Result<Waiter> {
         log.d { "Start updating waiter from remote" }
         waiterApiClient.getOwnWaiter().fold(
             onSuccess = { waiterDto ->
@@ -104,20 +105,13 @@ class WaiterServiceImpl(
                             "WaiterDto: $waiterDto"
                 }
                 waiterLocalRepository.replace(waiterDto.toWaiterLocalFromDto())
+                return Result.success(waiterDto.toWaiterFromDto())
             },
             onFailure = { cause ->
                 log.e { "Fail fetching waiter from remote - start cleanup local data" }
                 waiterLocalRepository.cleanUp()
+                return Result.failure(cause)
             }
         )
     }
-
-//    override suspend fun changePreferCompany(preferCompanyId: String): Result<Unit> =
-//        waiterApiClient.editOwnWaiter(
-//            EditOwnEmployeePayload(preferCompanyId = preferCompanyId)
-//        ).apply {
-//            waiterLocalRepository.update { current ->
-//                current.apply { this.preferCompanyId = preferCompanyId }
-//            }
-//        }
 }

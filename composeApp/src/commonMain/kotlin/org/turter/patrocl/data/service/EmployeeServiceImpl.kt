@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 import org.turter.patrocl.data.dto.person.EditOwnEmployeePayload
 import org.turter.patrocl.data.local.LocalSource
 import org.turter.patrocl.data.local.entity.EmployeeLocal
+import org.turter.patrocl.data.mapper.toEmployeeFromDto
 import org.turter.patrocl.data.mapper.toEmployeeFromLocal
 import org.turter.patrocl.data.mapper.toEmployeeLocalFromDto
 import org.turter.patrocl.data.remote.client.EmployeeApiClient
@@ -94,7 +95,7 @@ class EmployeeServiceImpl(
 
     override suspend fun checkEmployee() = refreshEmployeeFlow.emit(Unit)
 
-    override suspend fun updateEmployeeFromRemote() {
+    override suspend fun updateEmployeeFromRemote(): Result<Employee> {
         log.d { "Start updating employee from remote" }
         employeeApiClient.getOwnEmployee().fold(
             onSuccess = { employeeDto ->
@@ -103,10 +104,12 @@ class EmployeeServiceImpl(
                             "EmployeeDto: $employeeDto"
                 }
                 employeeLocalSource.replace(employeeDto.toEmployeeLocalFromDto())
+                return Result.success(employeeDto.toEmployeeFromDto())
             },
             onFailure = { cause ->
                 log.e { "Fail fetching employee from remote - start cleanup local data" }
                 employeeLocalSource.cleanUp()
+                return Result.failure(cause)
             }
         )
     }

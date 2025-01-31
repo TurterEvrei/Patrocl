@@ -15,7 +15,7 @@ data class OrdersTab(
 ): Tab {
     @Composable
     override fun Content() {
-        Navigator(OrdersScreen(waiter = waiter))
+        Navigator(OrdersScreen())
     }
 
     override val options: TabOptions
