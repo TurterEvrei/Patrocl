@@ -48,6 +48,7 @@ class HttpClientInitializer(
         }
         install(HttpTimeout) {
             requestTimeoutMillis = 15_000
+//            socketTimeoutMillis = Long.MAX_VALUE
         }
         install(Logging) {
             level = LogLevel.ALL

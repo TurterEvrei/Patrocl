@@ -1,6 +1,7 @@
 package org.turter.patrocl.data.dto.stoplist
 
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -10,7 +11,7 @@ data class StopListItemDto(
     val companyId: String,
     val onStop: Boolean,
     val remainingCount: Int,
-    val until: Instant,
+    val until: String,
     val createdAt: Instant,
     val createdBy: String
 )

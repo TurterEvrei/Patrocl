@@ -1,5 +1,6 @@
 package org.turter.patrocl.data.mapper.stoplist
 
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.turter.patrocl.data.dto.stoplist.StopListDto
@@ -23,6 +24,12 @@ fun StopListItemDto.toStopListItem(dishes: List<Dish>) = StopListItem(
     dishName = dishes.find { it.id == dishId }?.name?:"",
     onStop = onStop,
     remainingCount = remainingCount,
-    until = until.toLocalDateTime(TimeZone.currentSystemDefault()),
+    until = until.let { time ->
+        try {
+            LocalDateTime.parse(time)
+        } catch (e: Exception) {
+            LocalDateTime(2077, 4, 1, 0, 0)
+        }
+    },
     createdAt = createdAt
 )

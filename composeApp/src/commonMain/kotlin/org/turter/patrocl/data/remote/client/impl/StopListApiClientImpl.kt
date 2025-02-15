@@ -3,6 +3,7 @@ package org.turter.patrocl.data.remote.client.impl
 import co.touchlab.kermit.Logger
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.sse.SSEClientException
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -34,44 +35,60 @@ class StopListApiClientImpl(
 
     override suspend fun getStopListFlow(): Flow<Result<StopListDto>> {
         return callbackFlow {
-            try {
-                httpClient.sse(ApiEndpoint.StopList.getStopListFlow()) {
-                    incoming.collect { event ->
-                        log.d(event.toString())
-                        val data = event.data
-                        if (!data.isNullOrBlank()) {
-                            val result: Result<StopListDto> = try {
-                                Result.success(Json.decodeFromString(data))
-                            } catch (e: Exception) {
-                                Result.failure(e)
+            var flag = true
+            while (flag) {
+                try {
+                    httpClient.sse(ApiEndpoint.StopList.getStopListFlow()) {
+                        incoming.collect { event ->
+                            log.d(event.toString())
+                            val data = event.data
+                            if (!data.isNullOrBlank()) {
+                                val result: Result<StopListDto> = try {
+                                    Result.success(Json.decodeFromString(data))
+                                } catch (e: Exception) {
+                                    Result.failure(e)
+                                }
+                                log.d("Decoding result: $result")
+                                trySend(result)
                             }
-                            log.d("Decoding result: $result")
-                            trySend(result)
+                        }
+                    }
+                } catch (e: Exception) {
+                    when (e) {
+                        is SSEClientException -> {
+                            log.e { "Catch exception in sse: ${e.message}" }
+                            log.d { "Reconnecting" }
+                        }
+
+                        else -> {
+                            trySend(Result.failure(e))
+                            close()
                         }
                     }
                 }
-            } catch (e: Exception) {
-                trySend(Result.failure(e))
-                close()
             }
         }
     }
 
     override suspend fun createItem(payload: CreateStopListItemPayload): Result<StopListItemDto> =
         proceedRequest(
-            action = { httpClient.post(ApiEndpoint.StopList.createStopListItem()) {
-                contentType(ContentType.Application.Json)
-                setBody(payload)
-            } },
+            action = {
+                httpClient.post(ApiEndpoint.StopList.createStopListItem()) {
+                    contentType(ContentType.Application.Json)
+                    setBody(payload)
+                }
+            },
             decoder = { Json.decodeFromString(it.body()) }
         )
 
     override suspend fun editItem(payload: EditStopListItemPayload): Result<StopListItemDto> =
         proceedRequest(
-            action = { httpClient.post(ApiEndpoint.StopList.editStopListItem()) {
-                contentType(ContentType.Application.Json)
-                setBody(payload)
-            } },
+            action = {
+                httpClient.post(ApiEndpoint.StopList.editStopListItem()) {
+                    contentType(ContentType.Application.Json)
+                    setBody(payload)
+                }
+            },
             decoder = { Json.decodeFromString(it.body()) }
         )
 
@@ -83,10 +100,12 @@ class StopListApiClientImpl(
 
     override suspend fun deleteItems(ids: List<String>): Result<Unit> {
         return proceedRequest(
-            action = { httpClient.post(ApiEndpoint.StopList.removeStopListItems()) {
-                contentType(ContentType.Application.Json)
-                setBody(ids)
-            } },
+            action = {
+                httpClient.post(ApiEndpoint.StopList.removeStopListItems()) {
+                    contentType(ContentType.Application.Json)
+                    setBody(ids)
+                }
+            },
             decoder = { }
         )
     }
